@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "dttr"
+version = "0.1.0"
+description = "dttr (pronounced as dotter) is a template based solution to managing your dotfiles"
+authors = ["Ian Mancini <ianmethyst@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+chevron = "^0.14.0"
+click = "^8.0.1"
+toml = "^0.10.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+black = {version = "^21.5b2", allow-prereleases = true}
+flake8 = "^3.9.2"
+pre-commit = "^2.13.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+target-version = ['py39']
+include = '\.pyi?$'
