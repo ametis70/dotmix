@@ -1,54 +1,57 @@
 import sys
-import toml
-from dttr.utils import get_path_from_env
 from pathlib import Path
-from typing import Optional, TypedDict, cast
+from typing import Optional
+
+import toml
+from pydantic import BaseModel
+
+from .utils import get_path_from_env, load_toml_cfg
 
 
-class GeneralConfig(TypedDict):
+class DefaultsConfig(BaseModel):
+    template: Optional[str]
+    theme: Optional[str]
+    colors: Optional[str]
+    fonts: Optional[str]
+
+
+class HooksConfig(BaseModel):
+    pre: Optional[str]
+    post: Optional[str]
+
+
+class GeneralConfig(BaseModel):
     data_path: str
     out_path: str
 
 
-class DefaultsConfig(TypedDict, total=False):
-    template: str
-    theme: str
-    colors: str
-    fonts: str
-
-
-class HooksConfig(TypedDict, total=False):
-    pre: str
-    post: str
-
-
-class Config(TypedDict, total=False):
+class Config(BaseModel):
     general: GeneralConfig
-    defaults: DefaultsConfig
-    hooks: HooksConfig
+    defaults: Optional[DefaultsConfig]
+    hooks: Optional[HooksConfig]
 
 
 def generate_config(data_path: Path) -> str:
     """Returns a valid dttr TOML config (string)"""
 
-    cfg: Config = {
-        "general": {
+    cfg = Config(
+        general={
             "data_path": str(data_path),
             "out_path": str(data_path / "out"),
         },
-    }
+    )
 
-    return toml.dumps(cfg)
+    return toml.dumps(cfg.dict())
 
 
-def get_data_path() -> Path:
+def get_data_dir() -> Path:
     """Get dttr data path"""
     env_vars = ["DTTR_DATA_DIR", ("XDG_DATA_HOME", True)]
 
     return Path(get_path_from_env(env_vars))
 
 
-def get_config_path() -> Path:
+def get_config_dir() -> Path:
     """Get dttr config path"""
     env_vars = ["DTTR_CONFIG_DIR", ("XDG_CONFIG_HOME", True)]
 
@@ -56,16 +59,18 @@ def get_config_path() -> Path:
 
 
 def get_config() -> Config:
-    config_path = get_config_path()
-    config_file = config_path / "config.toml"
-    if config_file.exists:
-        return cast(Config, toml.load(config_file))
+    config_path = get_config_dir()
+    cfg = load_toml_cfg(config_path, "config.toml", Config)
+    if cfg is not None:
+        return cfg
+
     else:
-        print("Error: {config_file} doesn't exist")
         sys.exit(1)
 
 
-def create_config(config_path: Optional[Path] = None, data_path: Optional[Path] = None):
+def create_config(
+    config_path: Optional[Path] = None, data_path: Optional[Path] = None
+) -> None:
     """Create the config file if it doesn't exist
 
     This function takes to optional parameters to change the configuration directory and
@@ -75,7 +80,7 @@ def create_config(config_path: Optional[Path] = None, data_path: Optional[Path] 
     """
 
     if not config_path:
-        config_path = get_config_path()
+        config_path = get_config_dir()
 
     if not config_path.exists() and not config_path.is_dir():
         config_path.mkdir()
@@ -88,7 +93,7 @@ def create_config(config_path: Optional[Path] = None, data_path: Optional[Path] 
         return
 
     if not data_path:
-        data_path = get_data_path()
+        data_path = get_data_dir()
 
     with config_file.open("w", encoding="utf-8") as f:
         config = generate_config(data_path)
@@ -98,7 +103,7 @@ def create_config(config_path: Optional[Path] = None, data_path: Optional[Path] 
 
 def scaffold_data_path() -> None:
     """Create the directory structure for the data path"""
-    path = Path(get_config().get("general").get("data_path"))
+    path = Path(get_config().general.data_path)
 
     if not path.is_dir():
         path.mkdir()
