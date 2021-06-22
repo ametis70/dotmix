@@ -91,6 +91,7 @@ def load_toml_cfg(dir: Path, file: str, model: Type[T]) -> Optional[T]:
         raise
 
     finally:
-        fd.close()
+        if fd and not fd.closed:
+            fd.close()
 
     return model_instance
