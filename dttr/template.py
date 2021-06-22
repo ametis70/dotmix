@@ -2,6 +2,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional, Tuple
+import click
 
 from pydantic import BaseModel
 
@@ -122,7 +123,10 @@ def add_or_replace_files(original: List[TemplateFile], new: List[TemplateFile]):
     return list(original_dict.values())
 
 
-def get_merged_template_from_extends(t: Template):
+def get_merged_template_from_extends(
+    t: Template,
+) -> Tuple[List[TemplateFile], List[Template]]:
+    """Merge templates files and return them with the list of templates merged"""
     templates = get_extended_templates([t])
 
     files: List[TemplateFile] = []
@@ -130,4 +134,27 @@ def get_merged_template_from_extends(t: Template):
     for template in reversed(templates):
         files = add_or_replace_files(files, get_template_files(template))
 
-    return files
+    return (files, templates)
+
+
+def print_merged_template_files(merged: Tuple[List[TemplateFile], List[Template]]):
+    """Pretty prints the result from get_merged_template_from_extends"""
+
+    files = merged[0].copy()
+    templates = merged[1]
+
+    for i, template in enumerate(templates):
+        click.secho(
+            f"Files {'' if i == 0 else 'inherited '}from template {template}\n",
+            fg="blue",
+            bold=True,
+        )
+
+        for index, file in enumerate(files):
+            newline = index == len(files) - 1
+            if file[2].name == template.name:
+                click.secho(f"  {file[0]}")
+                del files[index]
+
+            if newline:
+                click.echo("")
