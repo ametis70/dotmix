@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from .config import get_data_dir
 from .utils import load_toml_cfg
+from .cli import cli
 
 
 class TemplateConfig(BaseModel):
@@ -58,7 +59,7 @@ def get_templates() -> List[Template]:
 def get_template_by_name(name: str) -> Optional[Template]:
     templates = get_templates()
 
-    t = next(filter(lambda t: t.name == name, templates), None)
+    t = next((t for t in templates if t.name == name), None)
 
     if t is not None:
         return t
@@ -92,9 +93,7 @@ def get_extended_templates(templates: List[Template]) -> List[Template]:
 
     if template.extends:
         all_templates = get_templates()
-        extended = next(
-            filter(lambda t: t.name == template.extends, all_templates), None
-        )
+        extended = next((t for t in all_templates if t.name == template.name), None)
 
         if extended is not None:
             if extended in templates:
@@ -140,7 +139,7 @@ def get_merged_template_from_extends(
 def print_merged_template_files(merged: Tuple[List[TemplateFile], List[Template]]):
     """Pretty prints the result from get_merged_template_from_extends"""
 
-    files = merged[0].copy()
+    files = merged[0]
     templates = merged[1]
 
     for i, template in enumerate(templates):
@@ -154,7 +153,28 @@ def print_merged_template_files(merged: Tuple[List[TemplateFile], List[Template]
             newline = index == len(files) - 1
             if file[2].name == template.name:
                 click.secho(f"  {file[0]}")
-                del files[index]
 
             if newline:
                 click.echo("")
+
+
+@cli.group()
+def template():
+    """Manage templates"""
+
+
+@template.command("list")
+def cli_list():
+    """Show template names"""
+    for template in get_templates():
+        click.secho(template.name, fg="blue", bold=True)
+
+
+@template.command("files")
+@click.argument("template")
+def cli_files(template):
+    """List template files"""
+    t = get_template_by_name(template)
+
+    if t:
+        print_merged_template_files(get_merged_template_from_extends(t))
