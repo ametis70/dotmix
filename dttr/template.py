@@ -2,13 +2,13 @@ import os
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional, Tuple
-import click
 
+import click
 from pydantic import BaseModel
 
-from .config import get_data_dir
-from .utils import load_toml_cfg
 from .cli import cli
+from .config import get_data_dir
+from .utils import load_toml_cfg_model
 
 
 class TemplateConfig(BaseModel):
@@ -44,9 +44,9 @@ def get_templates() -> List[Template]:
         if not path.is_dir():
             continue
 
-        cfg = load_toml_cfg(templates_dir / dir, "template.toml", TemplateConfig)
+        cfg = load_toml_cfg_model(templates_dir / dir, "template.toml", TemplateConfig)
 
-        if cfg is None:
+        if not cfg:
             continue
 
         if cfg.name:

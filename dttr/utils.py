@@ -1,7 +1,8 @@
 import sys
 from os import environ
 from pathlib import Path
-from typing import List, Optional, Tuple, Type, TypeVar, Union
+from typing import Dict, List, Optional, Tuple, Type, TypeVar, Union, cast
+import click
 
 import toml
 from pydantic.error_wrappers import ValidationError
@@ -51,47 +52,55 @@ def get_path_from_env(env_vars: List[Union[str, Tuple[str, bool]]]) -> str:
     sys.exit(1)
 
 
-T = TypeVar("T", bound=BaseModel)
-
-
-def load_toml_cfg(dir: Path, file: str, model: Type[T]) -> Optional[T]:
+def load_toml_cfg(dir: Path, file: str) -> Optional[Dict]:
     cfg_file = dir / file
-    model_instance = None
     fd = None
+    cfg = None
 
     try:
         fd = cfg_file.open("r")
         content = fd.read()
-        cfg = toml.loads(content)
+        cfg = cast(Dict, toml.loads(content))
 
-        if not len(cfg) > 0:
-            print(f"Warning: {cfg_file} is empty", file=sys.stderr)
-
-        model_instance = model.parse_obj(cfg)
+        if not cfg:
+            click.echo(f"Warning: {cfg_file} exist but it's empty", err=True)
 
     except FileNotFoundError:
-        print(f"Error: {cfg_file} does no exist", file=sys.stderr)
-        raise
+        click.echo(f"Error: {cfg_file} does not exist", err=True)
+        sys.exit(1)
 
     except PermissionError:
-        print(
-            f"Error: cannot access {cfg_file} due to wrong permissions", file=sys.stderr
+        click.echo(
+            f"Error: cannot access {cfg_file} due to wrong permissions", err=True
         )
-        raise
+        sys.exit(1)
 
     except ValidationError as e:
-        print(
+        click.echo(
             f"Error: invalid/missing values found in {cfg_file}\n\n{str(e)}",
-            file=sys.stderr,
+            err=True,
         )
-        raise
+        sys.exit(1)
 
     except TomlDecodeError:
-        print(f"Error: invalid TOML syntax in {cfg_file}", file=sys.stderr)
-        raise
+        click.echo(f"Error: invalid TOML syntax in {cfg_file}", err=True)
+        sys.exit(1)
 
     finally:
         if fd and not fd.closed:
             fd.close()
+
+    return cfg
+
+
+T = TypeVar("T", bound=BaseModel)
+
+
+def load_toml_cfg_model(dir: Path, file: str, model: Type[T]) -> Optional[T]:
+    model_instance = None
+    cfg = load_toml_cfg(dir, file)
+
+    if model:
+        model_instance = model.parse_obj(cfg)
 
     return model_instance

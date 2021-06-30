@@ -5,7 +5,7 @@ from typing import Optional
 import toml
 from pydantic import BaseModel
 
-from .utils import get_path_from_env, load_toml_cfg
+from .utils import get_path_from_env, load_toml_cfg_model
 
 
 class DefaultsConfig(BaseModel):
@@ -60,8 +60,8 @@ def get_config_dir() -> Path:
 
 def get_config() -> Config:
     config_path = get_config_dir()
-    cfg = load_toml_cfg(config_path, "config.toml", Config)
-    if cfg is not None:
+    cfg = load_toml_cfg_model(config_path, "config.toml", Config)
+    if cfg:
         return cfg
 
     else:
