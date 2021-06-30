@@ -2,6 +2,7 @@ import os
 import re
 from functools import lru_cache
 from pathlib import Path
+import sys
 from typing import Dict, List, Literal, Optional, cast
 
 import click
@@ -84,8 +85,8 @@ class Colors(BaseModel):
 
 
 class ColorschemeTypes(BaseModel):
-    terminal: Optional[TerminalColorscheme]
-    base16: Optional[Base16Colorscheme]
+    terminal: TerminalColorscheme
+    base16: Base16Colorscheme
 
 
 class ColorschemeConfig(BaseModel):
@@ -237,7 +238,10 @@ def get_extended_colorschemes(colorschemes: List[Colorscheme]) -> List[Colorsche
     return get_extended_colorschemes(colorschemes)
 
 
-def make_alt_color(color: str) -> str:
+def make_alt_color(color: Optional[str]) -> str:
+    if not color:
+        raise ValueError("Error: Called make_alt_color with empty string")
+
     c = cast(HEX, HEX(color))
     alt_c = c.darker(1.25) if c.brightness() > 0.5 else c.brighter(1.25)
     return str(alt_c)
@@ -253,7 +257,7 @@ def make_brown_from_orange():
 
 def get_colors(colors: ColorschemeTypes):
     if COLORMODE == "base16":
-        return get_colors_from_base16(colors.base16.dict())
+        return get_colors_from_base16(colors.base16)
 
     elif COLORMODE == "terminal":
         raise NotImplementedError
@@ -262,38 +266,42 @@ def get_colors(colors: ColorschemeTypes):
         raise ValueError('COLORMODE should be "base16" or "terminal"')
 
 
-def get_colors_from_base16(colors: Dict[str, str]) -> Colors:
+def get_colors_from_base16(colors: Base16Colorscheme) -> Colors:
     c = colors
 
-    colors = {
-        "bg": c["base00"],
-        "light_bg": c["base01"],
-        "selection": c["base02"],
-        "comment": c["base03"],
-        "dark_fg": c["base04"],
-        "fg": c["base05"],
-        "light_fg": c["base06"],
-        "lighter_fg": c["base07"],
-        "red": c["base08"],
-        "orange": c["base09"],
-        "yellow": c["base0A"],
-        "green": c["base0B"],
-        "cyan": c["base0C"],
-        "blue": c["base0D"],
-        "magenta": c["base0E"],
-        "brown": c["base0F"],
+    color_dict = {
+        "bg": c.base00,
+        "light_bg": c.base01,
+        "selection": c.base02,
+        "comment": c.base03,
+        "dark_fg": c.base04,
+        "fg": c.base05,
+        "light_fg": c.base06,
+        "lighter_fg": c.base07,
+        "red": c.base08,
+        "orange": c.base09,
+        "yellow": c.base0A,
+        "green": c.base0B,
+        "cyan": c.base0C,
+        "blue": c.base0D,
+        "magenta": c.base0E,
+        "brown": c.base0F,
     }
 
-    colors["alt_red"] = make_alt_color(c["base08"])
-    colors["alt_orange"] = make_alt_color(c["base09"])
-    colors["alt_yellow"] = make_alt_color(c["base0A"])
-    colors["alt_green"] = make_alt_color(c["base0B"])
-    colors["alt_cyan"] = make_alt_color(c["base0C"])
-    colors["alt_blue"] = make_alt_color(c["base0D"])
-    colors["alt_magenta"] = make_alt_color(c["base0E"])
-    colors["alt_brown"] = make_alt_color(c["base0F"])
+    try:
+        color_dict["alt_red"] = make_alt_color(c.base08)
+        color_dict["alt_orange"] = make_alt_color(c.base09)
+        color_dict["alt_yellow"] = make_alt_color(c.base0A)
+        color_dict["alt_green"] = make_alt_color(c.base0B)
+        color_dict["alt_cyan"] = make_alt_color(c.base0C)
+        color_dict["alt_blue"] = make_alt_color(c.base0D)
+        color_dict["alt_magenta"] = make_alt_color(c.base0E)
+        color_dict["alt_brown"] = make_alt_color(c.base0F)
+    except ValueError:
+        click.secho("Error: Called make_alt_color with empty color", fg="red", err=True)
+        sys.exit(1)
 
-    return Colors.parse_obj(colors)
+    return Colors.parse_obj(color_dict)
 
 
 # def get_colors_from_terminal_colors(colors: Dict[str, str]) -> Colors
