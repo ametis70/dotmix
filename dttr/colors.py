@@ -2,14 +2,16 @@ import os
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, cast
 
 import click
+from colp import Color, HEX
 from pydantic import BaseModel
 
-from dttr.utils import load_toml_cfg, load_toml_cfg_model
-
+from .utils import load_toml_cfg, load_toml_cfg_model
 from .config import get_data_dir
+
+Color.MODE = "css"  # type: ignore
 
 
 class Base16Colorscheme(BaseModel):
@@ -184,19 +186,71 @@ def get_extended_colorschemes(colorschemes: List[Colorscheme]) -> List[Colorsche
         None,
     )
 
-    if extended is not None:
-        if extended in colorschemes:
-            raise RecursionError(
-                f"{colorscheme.name} tried to extend \
-{colorscheme.extends} but it was extended before"
-            )
+    if extended is None:
+        click.secho(
+            f"Warning: {colorscheme.name} tried to extend {colorscheme.extends} but it doesn't exists",  # noqa: E501
+            err=True,
+            fg="yellow",
+        )
+        return colorschemes
 
-        colorschemes.append(extended)
-        return get_extended_colorschemes(colorschemes)
-    else:
-        print(
-            f"Warning: {colorscheme.name} tried to extend \
-{colorscheme.extends} but it doesn't exists"
+    try:
+        if extended in colorschemes:
+            raise RecursionError
+    except RecursionError:
+        click.secho(
+            f"{colorscheme.name} tried to extend {colorscheme.extends} but it was extended before",  # noqa: E501
+            err=True,
+            fg="red",
         )
 
-    return colorschemes
+    colorschemes.append(extended)
+    return get_extended_colorschemes(colorschemes)
+
+
+def make_alt_color(color: str) -> str:
+    c = cast(HEX, HEX(color))
+    alt_c = c.darker(1.25) if c.brightness() > 0.5 else c.brighter(1.25)
+    return str(alt_c)
+
+
+def make_orange_from_yellow():
+    pass
+
+
+def make_brown_from_orange():
+    pass
+
+
+def get_colors_from_base16(colors: Dict[str, str]) -> Colors:
+    c = colors
+
+    colors = {
+        "bg": c["base00"],
+        "light_bg": c["base01"],
+        "selection": c["base02"],
+        "comment": c["base03"],
+        "dark_fg": c["base04"],
+        "fg": c["base05"],
+        "light_fg": c["base06"],
+        "lighter_fg": c["base07"],
+        "red": c["base08"],
+        "orange": c["base09"],
+        "yellow": c["base0A"],
+        "green": c["base0B"],
+        "cyan": c["base0C"],
+        "blue": c["base0D"],
+        "magenta": c["base0E"],
+        "brown": c["base0F"],
+    }
+
+    colors["alt_red"] = make_alt_color(c["base08"])
+    colors["alt_orange"] = make_alt_color(c["base09"])
+    colors["alt_yellow"] = make_alt_color(c["base0A"])
+    colors["alt_green"] = make_alt_color(c["base0B"])
+    colors["alt_cyan"] = make_alt_color(c["base0C"])
+    colors["alt_blue"] = make_alt_color(c["base0D"])
+    colors["alt_magenta"] = make_alt_color(c["base0E"])
+    colors["alt_brown"] = make_alt_color(c["base0F"])
+
+    return Colors.parse_obj(colors)
