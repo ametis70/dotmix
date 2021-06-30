@@ -2,7 +2,7 @@ import os
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List, Optional, cast
+from typing import Dict, List, Literal, Optional, cast
 
 import click
 from colp import Color, HEX
@@ -12,6 +12,7 @@ from .utils import load_toml_cfg, load_toml_cfg_model
 from .config import get_data_dir
 
 Color.MODE = "css"  # type: ignore
+COLORMODE: Literal["terminal", "base16"] = "base16"
 
 
 class Base16Colorscheme(BaseModel):
@@ -104,11 +105,12 @@ class Colorscheme:
         self.name = name
         self.filename = filename
         self.cfg = None
+        self.colors = None
 
     def __repr__(self):
         return f"<Colorscheme {self.name}>"
 
-    def load(self):
+    def load_cfg(self):
         dir = get_colors_dir()
 
         cfg = load_toml_cfg_model(dir, self.filename, ColorschemeConfig)
@@ -119,17 +121,42 @@ class Colorscheme:
 
     def get_cfg(self):
         if not self.cfg:
-            self.load()
+            self.load_cfg()
 
         return self.cfg
 
-    def get_colors(self):
+    def load_colors(self):
         if not self.cfg:
-            self.load()
+            self.load_cfg()
 
-        # if not self.cfg.extends:
+        if not self.cfg.extends:
+            self.colors = get_colors(self.cfg.colors)
 
-        # extended_templates = get_extended_colorschemes([self])
+        # extended_colorschemes = get_extended_colorschemes([self])
+
+        return self.colors
+
+    def get_colors(self):
+        if not self.colors:
+            self.load_colors()
+
+        return self.colors
+
+    def print_colors(self):
+        colors = self.get_colors()
+
+        for color, value in colors.dict().items():
+            c = cast(HEX, HEX(value))
+            r, g, b, = (
+                int(c.r * 255),
+                int(c.g * 255),
+                int(c.b * 255),
+            )
+            click.secho(
+                f"{color} - {str(c)} - RGB({r}, {g}, {b})",
+                fg=("white" if c.brightness() < 0.5 else "black"),
+                bg=(r, g, b),
+            )
 
 
 def get_colors_dir() -> Path:
@@ -222,6 +249,17 @@ def make_brown_from_orange():
     pass
 
 
+def get_colors(colors: ColorschemeTypes):
+    if COLORMODE == "base16":
+        return get_colors_from_base16(colors.base16.dict())
+
+    elif COLORMODE == "terminal":
+        raise NotImplementedError
+
+    else:
+        raise ValueError('COLORMODE should be "base16" or "terminal"')
+
+
 def get_colors_from_base16(colors: Dict[str, str]) -> Colors:
     c = colors
 
@@ -254,3 +292,6 @@ def get_colors_from_base16(colors: Dict[str, str]) -> Colors:
     colors["alt_brown"] = make_alt_color(c["base0F"])
 
     return Colors.parse_obj(colors)
+
+
+# def get_colors_from_terminal_colors(colors: Dict[str, str]) -> Colors
