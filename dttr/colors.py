@@ -152,8 +152,10 @@ class Colorscheme:
                 int(c.g * 255),
                 int(c.b * 255),
             )
+
+            rgb = f"RGB({r : >3}, {g : >3}, {b : >3})"
             click.secho(
-                f"{color} - {str(c)} - RGB({r}, {g}, {b})",
+                f"  {color : <10} - {str(c) : <7} - {rgb : <20}",
                 fg=("white" if c.brightness() < 0.5 else "black"),
                 bg=(r, g, b),
             )
