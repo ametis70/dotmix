@@ -1,9 +1,9 @@
 from . import utils, config, template
-from .cli import cli
+from .colorscheme import colorscheme
 
-cli = cli
 utils = utils
 config = config
 template = template
+colorscheme = colorscheme
 
 __version__ = "0.1.0"

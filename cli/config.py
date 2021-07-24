@@ -1,10 +1,8 @@
 import click
-import dttr
 
+import dttr.config
 
-@click.group()
-def cli():
-    pass
+from .cli import cli
 
 
 @cli.group()

@@ -2,106 +2,45 @@ import os
 import re
 from functools import lru_cache
 from pathlib import Path
-import sys
-from typing import Callable, Dict, List, Literal, Optional, cast
+from typing import Dict, List, Literal, Optional, cast
 
 import click
-from colp import Color, HEX
-from colp.conversion import RGB
+from .colp import HEX
 from pydantic import BaseModel
 
-from .utils import load_toml_cfg, load_toml_cfg_model
-from .config import get_data_dir
+from .utils import (
+    make_alt_color,
+    make_alt_color_inverse,
+    make_average_color,
+    make_brown_from_orange,
+    make_orange_from_yellow,
+)
 
-Color.MODE = "css"  # type: ignore
+from dttr.utils import load_toml_cfg, load_toml_cfg_model
+from dttr.config import get_data_dir
+
+from .models import (
+    ParsedColorschemeTypes,
+    DotterColorschemeModel,
+    TerminalColorschemeModel,
+    Base16ColorschemeModel,
+)
+
 COLORMODE: Literal["terminal", "base16"] = "terminal"
-
-
-class Base16Colorscheme(BaseModel):
-    base00: Optional[str]
-    base01: Optional[str]
-    base02: Optional[str]
-    base03: Optional[str]
-    base04: Optional[str]
-    base05: Optional[str]
-    base06: Optional[str]
-    base07: Optional[str]
-    base08: Optional[str]
-    base09: Optional[str]
-    base0A: Optional[str]
-    base0B: Optional[str]
-    base0C: Optional[str]
-    base0D: Optional[str]
-    base0E: Optional[str]
-    base0F: Optional[str]
-
-
-class TerminalColorscheme(BaseModel):
-    bg: Optional[str]
-    fg: Optional[str]
-    color0: Optional[str]
-    color1: Optional[str]
-    color2: Optional[str]
-    color3: Optional[str]
-    color4: Optional[str]
-    color5: Optional[str]
-    color6: Optional[str]
-    color7: Optional[str]
-    color8: Optional[str]
-    color9: Optional[str]
-    color10: Optional[str]
-    color11: Optional[str]
-    color12: Optional[str]
-    color13: Optional[str]
-    color14: Optional[str]
-    color15: Optional[str]
-
-
-class Colors(BaseModel):
-    bg: str
-    light_bg: str
-    selection: str
-    comment: str
-    dark_fg: str
-    fg: str
-    light_fg: str
-    lighter_fg: str
-
-    red: str
-    orange: str
-    yellow: str
-    green: str
-    blue: str
-    cyan: str
-    magenta: str
-    brown: str
-
-    alt_red: str
-    alt_yellow: str
-    alt_orange: str
-    alt_green: str
-    alt_cyan: str
-    alt_blue: str
-    alt_brown: str
-
-
-class ColorschemeTypes(BaseModel):
-    terminal: TerminalColorscheme
-    base16: Base16Colorscheme
 
 
 class ColorschemeConfig(BaseModel):
     name: str
     extends: Optional[str]
     custom: Optional[Dict[str, str]]
-    colors: ColorschemeTypes
+    colors: ParsedColorschemeTypes
 
 
 class Colorscheme:
     name: str
     filename: str
     cfg: Optional[ColorschemeConfig]
-    colors: Optional[Colors]
+    colors: Optional[DotterColorschemeModel]
 
     def __init__(self, filename: str, name: str):
         self.name = name
@@ -110,10 +49,10 @@ class Colorscheme:
         self.colors = None
 
     def __repr__(self):
-        return f"<Colorscheme {self.name}>"
+        return f"<{__name__} {self.name}>"
 
     def load_cfg(self):
-        dir = get_colors_dir()
+        dir = get_colorschemes_dir()
 
         cfg = load_toml_cfg_model(dir, self.filename, ColorschemeConfig)
         if cfg:
@@ -132,7 +71,7 @@ class Colorscheme:
             self.load_cfg()
 
         if not self.cfg.extends:
-            self.colors = get_colors(self.cfg.colors)
+            self.colors = compute_colors(self.cfg.colors)
 
         # extended_colorschemes = get_extended_colorschemes([self])
 
@@ -163,14 +102,14 @@ class Colorscheme:
             )
 
 
-def get_colors_dir() -> Path:
+def get_colorschemes_dir() -> Path:
     return get_data_dir() / "colors"
 
 
 def get_colorscheme_files() -> Dict[str, str]:
     colors = {}
 
-    dir = get_colors_dir()
+    dir = get_colorschemes_dir()
     files = [f for f in os.listdir(dir) if re.match(r".*\.toml", f)]
 
     for file in files:
@@ -239,82 +178,20 @@ def get_extended_colorschemes(colorschemes: List[Colorscheme]) -> List[Colorsche
     return get_extended_colorschemes(colorschemes)
 
 
-def check_hex(func: Callable[[List[HEX]], str]):
-    def inner(*args: Optional[str]):
-        colors: List[HEX] = []
-        for arg in args:
-            try:
-                if not arg:
-                    raise ValueError(func.__name__)
-            except ValueError as f:
-                click.secho(f"Error: Called {f} with empty color", fg="red", err=True)
-                sys.exit(1)
-
-            try:
-                c = cast(HEX, HEX(arg))
-            except ValueError:
-                click.secho(
-                    f"{arg} is not a valid hex color string", fg="red", err=True
-                )
-                sys.exit(1)
-
-            colors.append(c)
-
-        return func(colors)
-
-    return inner
-
-
-@check_hex
-def make_alt_color(colors: List[HEX]) -> str:
-    c = colors[0]
-    return str(c.darker(1.25) if c.brightness() > 0.5 else c.brighter(1.25))
-
-
-@check_hex
-def make_alt_color_inverse(colors: List[HEX]) -> str:
-    c = colors[0]
-    return str(c.darker(1.1) if c.brightness() < 0.5 else c.brighter(1.1))
-
-
-@check_hex
-def make_orange_from_yellow(colors: List[HEX]) -> str:
-    c = colors[0]
-    return str(c.rotate(-15))
-
-
-@check_hex
-def make_brown_from_orange(colors: List[HEX]) -> str:
-    c = colors[0]
-    return str(c.rotate(-10).darker(1.1))
-
-
-@check_hex
-def make_average_color(colors: List[HEX]) -> str:
-    try:
-        a = colors[0]
-        b = colors[1]
-    except IndexError:
-        click.secho(
-            "make_average_color requires a list of two items", fg="red", err=True
-        )
-        sys.exit(1)
-
-    return str(RGB((a.r + b.r) / 2, (a.g + b.g) / 2, (a.b + b.b) / 2).to(HEX))
-
-
-def get_colors(colors: ColorschemeTypes):
+def compute_colors(colors: ParsedColorschemeTypes):
     if COLORMODE == "base16":
-        return get_colors_from_base16(colors.base16)
+        return compute_colorscheme_from_base16(colors.base16)
 
     elif COLORMODE == "terminal":
-        return get_colors_from_terminal(colors.terminal)
+        return compute_colorscheme_from_terminal(colors.terminal)
 
     else:
         raise ValueError('COLORMODE should be "base16" or "terminal"')
 
 
-def get_colors_from_base16(colors: Base16Colorscheme) -> Colors:
+def compute_colorscheme_from_base16(
+    colors: Base16ColorschemeModel,
+) -> DotterColorschemeModel:
     c = colors
 
     color_dict = {
@@ -345,10 +222,12 @@ def get_colors_from_base16(colors: Base16Colorscheme) -> Colors:
     color_dict["alt_magenta"] = make_alt_color(c.base0E)
     color_dict["alt_brown"] = make_alt_color(c.base0F)
 
-    return Colors.parse_obj(color_dict)
+    return DotterColorschemeModel.parse_obj(color_dict)
 
 
-def get_colors_from_terminal(colors: TerminalColorscheme) -> Colors:
+def compute_colorscheme_from_terminal(
+    colors: TerminalColorschemeModel,
+) -> DotterColorschemeModel:
     c = colors
 
     color_dict = {
@@ -381,4 +260,4 @@ def get_colors_from_terminal(colors: TerminalColorscheme) -> Colors:
     )
     color_dict["lighter_fg"] = make_alt_color_inverse(color_dict["light_fg"])
 
-    return Colors.parse_obj(color_dict)
+    return DotterColorschemeModel.parse_obj(color_dict)

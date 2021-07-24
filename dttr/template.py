@@ -6,7 +6,6 @@ from typing import List, Optional, Tuple
 import click
 from pydantic import BaseModel
 
-from .cli import cli
 from .config import get_data_dir
 from .utils import load_toml_cfg_model
 
@@ -156,25 +155,3 @@ def print_merged_template_files(merged: Tuple[List[TemplateFile], List[Template]
 
             if newline:
                 click.echo("")
-
-
-@cli.group()
-def template():
-    """Manage templates"""
-
-
-@template.command("list")
-def cli_list():
-    """Show template names"""
-    for template in get_templates():
-        click.secho(template.name, fg="blue", bold=True)
-
-
-@template.command("files")
-@click.argument("template")
-def cli_files(template):
-    """List template files"""
-    t = get_template_by_name(template)
-
-    if t:
-        print_merged_template_files(get_merged_template_from_extends(t))
