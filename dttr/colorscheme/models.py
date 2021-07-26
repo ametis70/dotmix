@@ -55,7 +55,7 @@ class DotterColorschemeModel(BaseModel):
     dark_fg: str
     fg: str
     light_fg: str
-    lighter_fg: str
+    lighter_bg: str
 
     red: str
     orange: str

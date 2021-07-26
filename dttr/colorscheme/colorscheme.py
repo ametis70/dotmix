@@ -202,7 +202,7 @@ def compute_colorscheme_from_base16(
         "dark_fg": c.base04,
         "fg": c.base05,
         "light_fg": c.base06,
-        "lighter_fg": c.base07,
+        "lighter_bg": c.base07,
         "red": c.base08,
         "orange": c.base09,
         "yellow": c.base0A,
@@ -258,6 +258,6 @@ def compute_colorscheme_from_terminal(
     color_dict["selection"] = make_average_color(
         color_dict["light_bg"], color_dict["comment"]
     )
-    color_dict["lighter_fg"] = make_alt_color_inverse(color_dict["light_fg"])
+    color_dict["lighter_bg"] = make_alt_color_inverse(color_dict["light_fg"])
 
     return DotterColorschemeModel.parse_obj(color_dict)
