@@ -1,12 +1,11 @@
 import os
 import re
-from functools import lru_cache
+from functools import cached_property, lru_cache
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, cast
+from typing import Dict, Literal, Optional, TypedDict, cast
 
 import click
 from .colp import HEX
-from pydantic import BaseModel
 
 from .utils import (
     make_alt_color,
@@ -17,74 +16,40 @@ from .utils import (
 )
 
 from dttr.utils import load_toml_cfg, load_toml_cfg_model
+from dttr.utils.abstractcfg import BaseSchema, AbstractConfig
 from dttr.config import get_data_dir
 
 from .models import (
-    ParsedColorschemeTypes,
-    DotterColorschemeModel,
-    TerminalColorschemeModel,
-    Base16ColorschemeModel,
+    ParsedColorschemes,
+    DttrColorscheme,
+    TerminalColorscheme,
+    Base16Colorscheme,
 )
 
 COLORMODE: Literal["terminal", "base16"] = "terminal"
 
 
-class ColorschemeConfig(BaseModel):
-    name: str
-    extends: Optional[str]
-    custom: Optional[Dict[str, str]]
-    colors: ParsedColorschemeTypes
+class ColorschemeConfig(BaseSchema):
+    colors: ParsedColorschemes
 
 
-class Colorscheme:
-    name: str
-    filename: str
-    cfg: Optional[ColorschemeConfig]
-    colors: Optional[DotterColorschemeModel]
-
-    def __init__(self, filename: str, name: str):
-        self.name = name
-        self.filename = filename
-        self.cfg = None
-        self.colors = None
-
-    def __repr__(self):
-        return f"<{__name__} {self.name}>"
-
+class Colorscheme(AbstractConfig[ColorschemeConfig, DttrColorscheme]):
     def load_cfg(self):
-        dir = get_colorschemes_dir()
+        self._cfg = load_toml_cfg_model(self.cfg_file, ColorschemeConfig)
 
-        cfg = load_toml_cfg_model(dir, self.filename, ColorschemeConfig)
-        if cfg:
-            self.cfg = cfg
-        else:
-            click.echo(f"Failed to load {dir / self.filename}", err=True)
-
-    def get_cfg(self):
-        if not self.cfg:
-            self.load_cfg()
-
-        return self.cfg
-
-    def load_colors(self):
-        if not self.cfg:
-            self.load_cfg()
-
+    def compute_data(self):
         if not self.cfg.extends:
-            self.colors = compute_colors(self.cfg.colors)
+            self._data = compute_colors(self.cfg.colors)
 
-        # extended_colorschemes = get_extended_colorschemes([self])
+        # extended_colorschemes = self.parents
+        # print(extended_colorschemes)
 
-        return self.colors
+    @cached_property
+    def parents(self):
+        return self._get_parents(get_colorschemes, [self])
 
-    def get_colors(self):
-        if not self.colors:
-            self.load_colors()
-
-        return self.colors
-
-    def print_colors(self):
-        colors = self.get_colors()
+    def print_data(self):
+        colors = self.data
 
         for color, value in colors.dict().items():
             c = cast(HEX, HEX(value))
@@ -106,27 +71,39 @@ def get_colorschemes_dir() -> Path:
     return get_data_dir() / "colors"
 
 
-def get_colorscheme_files() -> Dict[str, str]:
-    colors = {}
+class ColorschemeFile(TypedDict):
+    id: str
+    name: str
+    path: Path
+
+
+@lru_cache
+def get_colorscheme_files():
+    colors: Dict[str, ColorschemeFile] = {}
 
     dir = get_colorschemes_dir()
     files = [f for f in os.listdir(dir) if re.match(r".*\.toml", f)]
 
     for file in files:
-        cfg = load_toml_cfg(dir, file)
+        path = Path(dir / file)
 
-        if cfg and cfg["name"]:
-            colors[cfg["name"]] = file
+        cfg = load_toml_cfg(Path(dir / file))
+        name = cfg["name"]
+
+        id = path.with_suffix("").name
+
+        if cfg and name:
+            colors[id] = {"id": id, "path": path, "name": name}
 
     return colors
 
 
-def get_colorschemes() -> Dict[str, Colorscheme]:
+def get_colorschemes():
     colorschemes: Dict[str, Colorscheme] = {}
     files = get_colorscheme_files()
 
     for name in files.keys():
-        c = get_colorscheme_by_name(name)
+        c = get_colorscheme_by_id(name)
         if c:
             colorschemes[name] = c
 
@@ -134,51 +111,20 @@ def get_colorschemes() -> Dict[str, Colorscheme]:
 
 
 @lru_cache()
-def get_colorscheme_by_name(name: str) -> Optional[Colorscheme]:
+def get_colorscheme_by_id(id: str) -> Optional[Colorscheme]:
     files = get_colorscheme_files()
 
     try:
-        filename = files[name]
-        return Colorscheme(filename, name)
+        colorscheme_file = files[id]
+        id = colorscheme_file["id"]
+        name = colorscheme_file["name"]
+        path = colorscheme_file["path"]
+        return Colorscheme(id, name, path)
     except KeyError:
-        click.echo(f'Theme "{name}" not found', err=True)
+        click.echo(f'Theme "{id}" not found', err=True)
 
 
-def get_extended_colorschemes(colorschemes: List[Colorscheme]) -> List[Colorscheme]:
-    """Get extended colorschemes recursively"""
-    colorscheme = colorschemes[-1].get_cfg()
-
-    if not colorscheme.extends:
-        return colorschemes
-
-    extended = next(
-        (c for c in get_colorschemes().values() if c.name == colorscheme.extends),
-        None,
-    )
-
-    if extended is None:
-        click.secho(
-            f"Warning: {colorscheme.name} tried to extend {colorscheme.extends} but it doesn't exists",  # noqa: E501
-            err=True,
-            fg="yellow",
-        )
-        return colorschemes
-
-    try:
-        if extended in colorschemes:
-            raise RecursionError
-    except RecursionError:
-        click.secho(
-            f"{colorscheme.name} tried to extend {colorscheme.extends} but it was extended before",  # noqa: E501
-            err=True,
-            fg="red",
-        )
-
-    colorschemes.append(extended)
-    return get_extended_colorschemes(colorschemes)
-
-
-def compute_colors(colors: ParsedColorschemeTypes):
+def compute_colors(colors: ParsedColorschemes):
     if COLORMODE == "base16":
         return compute_colorscheme_from_base16(colors.base16)
 
@@ -190,8 +136,8 @@ def compute_colors(colors: ParsedColorschemeTypes):
 
 
 def compute_colorscheme_from_base16(
-    colors: Base16ColorschemeModel,
-) -> DotterColorschemeModel:
+    colors: Base16Colorscheme,
+) -> DttrColorscheme:
     c = colors
 
     color_dict = {
@@ -222,12 +168,12 @@ def compute_colorscheme_from_base16(
     color_dict["alt_magenta"] = make_alt_color(c.base0E)
     color_dict["alt_brown"] = make_alt_color(c.base0F)
 
-    return DotterColorschemeModel.parse_obj(color_dict)
+    return DttrColorscheme.parse_obj(color_dict)
 
 
 def compute_colorscheme_from_terminal(
-    colors: TerminalColorschemeModel,
-) -> DotterColorschemeModel:
+    colors: TerminalColorscheme,
+) -> DttrColorscheme:
     c = colors
 
     color_dict = {
@@ -260,4 +206,4 @@ def compute_colorscheme_from_terminal(
     )
     color_dict["lighter_bg"] = make_alt_color_inverse(color_dict["light_fg"])
 
-    return DotterColorschemeModel.parse_obj(color_dict)
+    return DttrColorscheme.parse_obj(color_dict)

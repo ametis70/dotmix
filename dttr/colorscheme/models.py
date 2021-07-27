@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class Base16ColorschemeModel(BaseModel):
+class Base16Colorscheme(BaseModel):
     base00: Optional[str]
     base01: Optional[str]
     base02: Optional[str]
@@ -21,7 +21,7 @@ class Base16ColorschemeModel(BaseModel):
     base0F: Optional[str]
 
 
-class TerminalColorschemeModel(BaseModel):
+class TerminalColorscheme(BaseModel):
     bg: Optional[str]
     fg: Optional[str]
     color0: Optional[str]
@@ -42,12 +42,12 @@ class TerminalColorschemeModel(BaseModel):
     color15: Optional[str]
 
 
-class ParsedColorschemeTypes(BaseModel):
-    terminal: TerminalColorschemeModel
-    base16: Base16ColorschemeModel
+class ParsedColorschemes(BaseModel):
+    terminal: TerminalColorscheme
+    base16: Base16Colorscheme
 
 
-class DotterColorschemeModel(BaseModel):
+class DttrColorscheme(BaseModel):
     bg: str
     light_bg: str
     selection: str

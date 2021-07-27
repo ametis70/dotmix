@@ -48,42 +48,32 @@ def get_path_from_env(env_vars: List[Union[str, Tuple[str, bool]]]) -> str:
                 value += "/dttr/"
             return value
 
-    print(f"Error: some of the following env vars must be set:\n{print_env_vars()}")
+    print(f"Error: any of the following env vars must be set:\n{print_env_vars()}")
     sys.exit(1)
 
 
-def load_toml_cfg(dir: Path, file: str) -> Optional[Dict]:
-    cfg_file = dir / file
+def load_toml_cfg(path: Path) -> Optional[Dict]:
     fd = None
     cfg = None
 
     try:
-        fd = cfg_file.open("r")
+        fd = path.open("r")
         content = fd.read()
         cfg = cast(Dict, toml.loads(content))
 
         if not cfg:
-            click.echo(f"Warning: {cfg_file} exist but it's empty", err=True)
+            click.echo(f"Warning: {path} exist but it's empty", err=True)
 
     except FileNotFoundError:
-        click.echo(f"Error: {cfg_file} does not exist", err=True)
+        click.echo(f"Error: {path} does not exist", err=True)
         sys.exit(1)
 
     except PermissionError:
-        click.echo(
-            f"Error: cannot access {cfg_file} due to wrong permissions", err=True
-        )
-        sys.exit(1)
-
-    except ValidationError as e:
-        click.echo(
-            f"Error: invalid/missing values found in {cfg_file}\n\n{str(e)}",
-            err=True,
-        )
+        click.echo(f"Error: cannot access {path} due to wrong permissions", err=True)
         sys.exit(1)
 
     except TomlDecodeError:
-        click.echo(f"Error: invalid TOML syntax in {cfg_file}", err=True)
+        click.echo(f"Error: invalid TOML syntax in {path}", err=True)
         sys.exit(1)
 
     finally:
@@ -96,11 +86,16 @@ def load_toml_cfg(dir: Path, file: str) -> Optional[Dict]:
 T = TypeVar("T", bound=BaseModel)
 
 
-def load_toml_cfg_model(dir: Path, file: str, model: Type[T]) -> Optional[T]:
+def load_toml_cfg_model(path: Path, model: Type[T]) -> T:
     model_instance = None
-    cfg = load_toml_cfg(dir, file)
-
-    if model:
+    cfg = load_toml_cfg(path)
+    try:
         model_instance = model.parse_obj(cfg)
+    except ValidationError as e:
+        click.echo(
+            f"Error: invalid/missing values found in {path}\n\n{str(e)}",
+            err=True,
+        )
+        sys.exit(1)
 
     return model_instance
