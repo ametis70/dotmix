@@ -11,7 +11,14 @@ def colorscheme():
 
 
 @colorscheme.command("list")
-def cli_list():
+def list():
     """Show colorscheme names"""
     for colorscheme in lib.get_colorschemes().keys():
         click.secho(colorscheme, fg="blue", bold=True)
+
+
+@colorscheme.command("show")
+@click.argument("id")
+def show(id):
+    """Display colors from colorscheme"""
+    lib.get_colorscheme_by_id(id).print_data()
