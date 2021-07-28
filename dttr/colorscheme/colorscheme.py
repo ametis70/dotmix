@@ -15,9 +15,9 @@ from .utils import (
     make_orange_from_yellow,
 )
 
-from dttr.utils import load_toml_cfg, load_toml_cfg_model
+from dttr.utils import deep_merge, load_toml_cfg, load_toml_cfg_model
 from dttr.utils.abstractcfg import BaseSchema, AbstractConfig
-from dttr.config import get_data_dir
+from dttr.config import get_config, get_data_dir
 
 from .models import (
     ParsedColorschemes,
@@ -41,8 +41,11 @@ class Colorscheme(AbstractConfig[ColorschemeConfig, DttrColorscheme]):
         if not self.cfg.extends:
             self._data = compute_colors(self.cfg.colors)
 
-        # extended_colorschemes = self.parents
-        # print(extended_colorschemes)
+        colors_dict = {}
+        for colorscheme in reversed(self.parents):
+            colors_dict = deep_merge(colors_dict, colorscheme.cfg.colors.dict())
+
+        self._data = compute_colors(ParsedColorschemes.parse_obj(colors_dict))
 
     @cached_property
     def parents(self):
@@ -125,14 +128,21 @@ def get_colorscheme_by_id(id: str) -> Optional[Colorscheme]:
 
 
 def compute_colors(colors: ParsedColorschemes):
-    if COLORMODE == "base16":
+    colormode = Optional[Literal["terminal", "base16"]]
+    env = os.getenv("DTTR_COLORMODE")
+    if env == "terminal" or env == "base16":
+        colormode = env
+    else:
+        colormode = get_config().colors.colormode
+
+    if colormode == "base16":
         return compute_colorscheme_from_base16(colors.base16)
 
-    elif COLORMODE == "terminal":
+    elif colormode == "terminal":
         return compute_colorscheme_from_terminal(colors.terminal)
 
     else:
-        raise ValueError('COLORMODE should be "base16" or "terminal"')
+        raise ValueError('colormode should be "base16" or "terminal"')
 
 
 def compute_colorscheme_from_base16(

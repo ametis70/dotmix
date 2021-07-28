@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 import toml
 from pydantic import BaseModel
@@ -25,10 +25,15 @@ class GeneralConfig(BaseModel):
     out_path: str
 
 
+class ColorsConfig(BaseModel):
+    colormode: Literal["terminal", "base16"]
+
+
 class Config(BaseModel):
     general: GeneralConfig
     defaults: Optional[DefaultsConfig]
     hooks: Optional[HooksConfig]
+    colors: ColorsConfig
 
 
 def generate_config(data_path: Path) -> str:
@@ -39,6 +44,7 @@ def generate_config(data_path: Path) -> str:
             "data_path": str(data_path),
             "out_path": str(data_path / "out"),
         },
+        colors={"colormode": "base16"},
     )
 
     return toml.dumps(cfg.dict())
@@ -60,16 +66,20 @@ def get_config_dir() -> Path:
 
 def get_config() -> Config:
     config_path = get_config_dir()
-    cfg = load_toml_cfg_model(config_path, "config.toml", Config)
+    cfg = load_toml_cfg_model(config_path / "config.toml", Config)
+
     if cfg:
         return cfg
 
     else:
+        # TODO: Add error message
         sys.exit(1)
 
 
 def create_config(
-    config_path: Optional[Path] = None, data_path: Optional[Path] = None
+    config_path: Optional[Path] = None,
+    data_path: Optional[Path] = None,
+    force: bool = False,
 ) -> None:
     """Create the config file if it doesn't exist
 
@@ -88,7 +98,7 @@ def create_config(
     filename = "config.toml"
     config_file = config_path / filename
 
-    if config_file.exists():
+    if not force and config_file.exists():
         print(f"Error: {filename} exists")
         return
 

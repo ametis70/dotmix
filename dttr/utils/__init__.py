@@ -99,3 +99,14 @@ def load_toml_cfg_model(path: Path, model: Type[T]) -> T:
         sys.exit(1)
 
     return model_instance
+
+
+def deep_merge(dict1: dict, dict2: dict) -> dict:
+    """Merges two dicts. If keys are conflicting, dict2 is preferred."""
+
+    def _val(v1, v2):
+        if isinstance(v1, dict) and isinstance(v2, dict):
+            return deep_merge(v1, v2)
+        return v2 or v1
+
+    return {k: _val(dict1.get(k), dict2.get(k)) for k in dict1.keys() | dict2.keys()}
