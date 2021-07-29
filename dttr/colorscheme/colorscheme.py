@@ -1,8 +1,7 @@
 import os
-import re
-from functools import cached_property, lru_cache
+from functools import cache, cached_property
 from pathlib import Path
-from typing import Dict, Literal, Optional, TypedDict, cast
+from typing import Dict, Literal, Optional, cast
 
 import click
 from .colp import HEX
@@ -15,7 +14,14 @@ from .utils import (
     make_orange_from_yellow,
 )
 
-from dttr.utils import deep_merge, load_toml_cfg, load_toml_cfg_model
+from dttr.utils import (
+    FilesDict,
+    deep_merge,
+    get_all_configs,
+    get_config_by_id,
+    get_config_files,
+    load_toml_cfg_model,
+)
 from dttr.utils.abstractcfg import BaseSchema, AbstractConfig
 from dttr.config import get_config, get_data_dir
 
@@ -74,57 +80,17 @@ def get_colorschemes_dir() -> Path:
     return get_data_dir() / "colors"
 
 
-class ColorschemeFile(TypedDict):
-    id: str
-    name: str
-    path: Path
+def get_colorscheme_files() -> FilesDict:
+    return get_config_files(get_colorschemes_dir())
 
 
-@lru_cache
-def get_colorscheme_files():
-    colors: Dict[str, ColorschemeFile] = {}
-
-    dir = get_colorschemes_dir()
-    files = [f for f in os.listdir(dir) if re.match(r".*\.toml", f)]
-
-    for file in files:
-        path = Path(dir / file)
-
-        cfg = load_toml_cfg(Path(dir / file))
-        name = cfg["name"]
-
-        id = path.with_suffix("").name
-
-        if cfg and name:
-            colors[id] = {"id": id, "path": path, "name": name}
-
-    return colors
+def get_colorschemes() -> Dict[str, Colorscheme]:
+    return get_all_configs(get_colorscheme_files(), get_colorscheme_by_id)
 
 
-def get_colorschemes():
-    colorschemes: Dict[str, Colorscheme] = {}
-    files = get_colorscheme_files()
-
-    for name in files.keys():
-        c = get_colorscheme_by_id(name)
-        if c:
-            colorschemes[name] = c
-
-    return colorschemes
-
-
-@lru_cache()
+@cache
 def get_colorscheme_by_id(id: str) -> Optional[Colorscheme]:
-    files = get_colorscheme_files()
-
-    try:
-        colorscheme_file = files[id]
-        id = colorscheme_file["id"]
-        name = colorscheme_file["name"]
-        path = colorscheme_file["path"]
-        return Colorscheme(id, name, path)
-    except KeyError:
-        click.echo(f'Theme "{id}" not found', err=True)
+    return get_config_by_id(id, get_colorscheme_files(), Colorscheme)
 
 
 def compute_colors(colors: ParsedColorschemes):

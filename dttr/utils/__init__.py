@@ -1,7 +1,21 @@
+from dttr.utils.abstractcfg import AbstractConfig
+from functools import cache
 import sys
-from os import environ
+import os
+import re
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, TypeVar, Union, cast
+from typing import (
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    TypedDict,
+    Union,
+    cast,
+)
 import click
 
 import toml
@@ -38,10 +52,10 @@ def get_path_from_env(env_vars: List[Union[str, Tuple[str, bool]]]) -> str:
         value = None
         append = False
         if type(var) is tuple:
-            value = environ.get(var[0])
+            value = os.environ.get(var[0])
             append = var[1]
         elif type(var) is str:
-            value = environ.get(var)
+            value = os.environ.get(var)
 
         if value:
             if append:
@@ -110,3 +124,59 @@ def deep_merge(dict1: dict, dict2: dict) -> dict:
         return v2 or v1
 
     return {k: _val(dict1.get(k), dict2.get(k)) for k in dict1.keys() | dict2.keys()}
+
+
+class FileMetadata(TypedDict):
+    id: str
+    name: str
+    path: Path
+
+
+FilesDict = Dict[str, FileMetadata]
+
+
+@cache
+def get_config_files(dir: Path):
+    files_dict: FilesDict = {}
+
+    files = [f for f in os.listdir(dir) if re.match(r".*\.toml", f)]
+
+    for file in files:
+        path = Path(dir / file)
+
+        cfg = load_toml_cfg(Path(dir / file))
+        name = cfg["name"]
+
+        id = path.with_suffix("").name
+
+        if cfg and name:
+            files_dict[id] = {"id": id, "path": path, "name": name}
+
+    return files_dict
+
+
+A = TypeVar("A", bound=AbstractConfig)
+
+
+def get_config_by_id(id: str, files: FilesDict, cls: Type[A]) -> Optional[A]:
+    try:
+        colorscheme_file = files[id]
+        id = colorscheme_file["id"]
+        name = colorscheme_file["name"]
+        path = colorscheme_file["path"]
+        return cls(id, name, path)
+    except KeyError:
+        click.echo(f'Theme "{id}" not found', err=True)
+
+
+def get_all_configs(
+    files: FilesDict, getter: Callable[[str], Optional[A]]
+) -> Dict[str, A]:
+    cfgs: Dict[str, A] = {}
+
+    for name in files.keys():
+        c = getter(name)
+        if c:
+            cfgs[name] = c
+
+    return cfgs

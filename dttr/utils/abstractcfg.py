@@ -58,6 +58,10 @@ class AbstractConfig(Generic[S, D], metaclass=ABCMeta):
 
         return self._data
 
+    @data.setter
+    def data(self, value: D) -> None:
+        self._data = value
+
     @abstractmethod
     def compute_data(self):
         """Populate `data` property with the values this class expects"""
