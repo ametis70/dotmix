@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from functools import cached_property
 from pathlib import Path
 from pydantic import BaseModel
-from typing import Dict, List, Callable, Optional, Union, TypeVar, Generic
+from typing import Dict, List, Callable, Optional, Type, Union, TypeVar, Generic
 import click
 
 A = TypeVar("A", bound="AbstractConfig")
@@ -80,7 +80,7 @@ class AbstractConfig(Generic[S, D], metaclass=ABCMeta):
 
     @classmethod
     def _get_parents(
-        cls,
+        cls: Type[A],
         get_all_configs: Callable[[], Dict[str, A]],
         configs: List[A],
     ) -> List[A]:
