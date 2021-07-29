@@ -25,4 +25,4 @@ def get_themes() -> Dict[str, Theme]:
 
 @cache
 def get_theme_by_id(id: str):
-    get_config_by_id(id, get_theme_files(), Theme)
+    return get_config_by_id(id, get_theme_files(), Theme)

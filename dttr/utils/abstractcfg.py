@@ -96,7 +96,7 @@ class AbstractConfig(Generic[S, D], metaclass=ABCMeta):
             return configs
 
         parent = next(
-            (c for c in get_all_configs().values() if c.name == last_cfg.extends),
+            (c for c in get_all_configs().values() if c.id == last_cfg.extends),
             None,
         )
 
