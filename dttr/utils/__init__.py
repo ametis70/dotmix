@@ -126,18 +126,18 @@ def deep_merge(dict1: dict, dict2: dict) -> dict:
     return {k: _val(dict1.get(k), dict2.get(k)) for k in dict1.keys() | dict2.keys()}
 
 
-class FileMetadata(TypedDict):
+class SettingsMetadata(TypedDict):
     id: str
     name: str
     path: Path
 
 
-FilesDict = Dict[str, FileMetadata]
+SettingsDict = Dict[str, SettingsMetadata]
 
 
 @cache
 def get_config_files(dir: Path):
-    files_dict: FilesDict = {}
+    files_dict: SettingsDict = {}
 
     files = [f for f in os.listdir(dir) if re.match(r".*\.toml", f)]
 
@@ -146,7 +146,6 @@ def get_config_files(dir: Path):
 
         cfg = load_toml_cfg(Path(dir / file))
         name = cfg["name"]
-
         id = path.with_suffix("").name
 
         if cfg and name:
@@ -158,7 +157,7 @@ def get_config_files(dir: Path):
 A = TypeVar("A", bound=AbstractConfig)
 
 
-def get_config_by_id(id: str, files: FilesDict, cls: Type[A]) -> Optional[A]:
+def get_config_by_id(id: str, files: SettingsDict, cls: Type[A]) -> Optional[A]:
     try:
         colorscheme_file = files[id]
         id = colorscheme_file["id"]
@@ -170,7 +169,7 @@ def get_config_by_id(id: str, files: FilesDict, cls: Type[A]) -> Optional[A]:
 
 
 def get_all_configs(
-    files: FilesDict, getter: Callable[[str], Optional[A]]
+    files: SettingsDict, getter: Callable[[str], Optional[A]]
 ) -> Dict[str, A]:
     cfgs: Dict[str, A] = {}
 

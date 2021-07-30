@@ -7,13 +7,13 @@ import click
 
 A = TypeVar("A", bound="AbstractConfig")
 S = TypeVar("S", bound="BaseSchema")
-D = TypeVar("D", bound=BaseModel)
+D = TypeVar("D", bound=Union[BaseModel, List, Dict])
 
 
 class BaseSchema(BaseModel):
     name: str
     extends: Optional[str]
-    custom: Dict[str, Union[str, bool, int, List, Dict]]
+    custom: Optional[Dict[str, Union[str, bool, int, List, Dict]]]
 
 
 class AbstractConfig(Generic[S, D], metaclass=ABCMeta):

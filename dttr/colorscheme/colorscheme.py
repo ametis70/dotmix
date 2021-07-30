@@ -15,7 +15,7 @@ from .utils import (
 )
 
 from dttr.utils import (
-    FilesDict,
+    SettingsDict,
     deep_merge,
     get_all_configs,
     get_config_by_id,
@@ -32,8 +32,6 @@ from .models import (
     Base16Colorscheme,
 )
 
-COLORMODE: Literal["terminal", "base16"] = "terminal"
-
 
 class ColorschemeConfig(BaseSchema):
     colors: ParsedColorschemes
@@ -47,6 +45,7 @@ class Colorscheme(AbstractConfig[ColorschemeConfig, DttrColorscheme]):
         if not self.cfg.extends:
             self._data = compute_colors(self.cfg.colors)
 
+        # TODO: Also inherit custom data
         colors_dict = {}
         for colorscheme in reversed(self.parents):
             colors_dict = deep_merge(colors_dict, colorscheme.cfg.colors.dict())
@@ -80,7 +79,7 @@ def get_colorschemes_dir() -> Path:
     return get_data_dir() / "colors"
 
 
-def get_colorscheme_files() -> FilesDict:
+def get_colorscheme_files() -> SettingsDict:
     return get_config_files(get_colorschemes_dir())
 
 
