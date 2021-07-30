@@ -67,9 +67,10 @@ class DttrColorscheme(BaseModel):
     brown: str
 
     alt_red: str
-    alt_yellow: str
     alt_orange: str
+    alt_yellow: str
     alt_green: str
-    alt_cyan: str
     alt_blue: str
+    alt_cyan: str
+    alt_magenta: str
     alt_brown: str
