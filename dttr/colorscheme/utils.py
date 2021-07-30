@@ -33,6 +33,11 @@ def check_hex(func: Callable[[List[HEX]], str]):
 
 
 @check_hex
+def normalize(colors: List[HEX]) -> str:
+    return str(colors[0])
+
+
+@check_hex
 def make_alt_color(colors: List[HEX]) -> str:
     c = colors[0]
     return str(c.darker(1.25) if c.brightness() > 0.5 else c.brighter(1.25))

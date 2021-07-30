@@ -29,6 +29,7 @@ from .utils import (
     make_average_color,
     make_brown_from_orange,
     make_orange_from_yellow,
+    normalize,
 )
 
 
@@ -38,7 +39,7 @@ class ColorschemeConfig(BaseSchema):
 
 class ColorschemeData(TypedDict):
     colors: DttrColorscheme
-    custom: Optional[Dict[str, Any]]
+    custom: Dict[str, Any]
 
 
 class Colorscheme(AbstractConfig[ColorschemeConfig, ColorschemeData]):
@@ -89,8 +90,12 @@ class Colorscheme(AbstractConfig[ColorschemeConfig, ColorschemeData]):
                 )
             )
 
+        custom = self.data["custom"]
+        if len(custom) == 0:
+            return
+
         click.secho(f"\nCustom variables from {self.name}\n", fg="blue", bold=True)
-        for key, value in self.data["custom"].items():
+        for key, value in custom.items():
             click.echo(
                 f"  {click.style(key, fg='yellow')} -> {click.style(value, fg='green')}"
             )
@@ -155,6 +160,8 @@ def compute_colorscheme_from_base16(
         "brown": c.base0F,
     }
 
+    color_dict = {k: normalize(v) for k, v in color_dict.items()}
+
     color_dict["alt_red"] = make_alt_color(c.base08)
     color_dict["alt_orange"] = make_alt_color(c.base09)
     color_dict["alt_yellow"] = make_alt_color(c.base0A)
@@ -192,6 +199,8 @@ def compute_colorscheme_from_terminal(
         "alt_magenta": c.color13,
         "alt_cyan": c.color14,
     }
+
+    color_dict = {k: normalize(v) for k, v in color_dict.items()}
 
     color_dict["orange"] = make_orange_from_yellow(color_dict["yellow"])
     color_dict["brown"] = make_brown_from_orange(color_dict["orange"])
