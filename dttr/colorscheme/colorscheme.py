@@ -1,7 +1,7 @@
 import os
 from functools import cache, cached_property
 from pathlib import Path
-from typing import Dict, Literal, Optional, cast
+from typing import Any, Dict, Literal, Optional, TypedDict, cast
 
 import click
 from .colp import HEX
@@ -37,28 +37,41 @@ class ColorschemeConfig(BaseSchema):
     colors: ParsedColorschemes
 
 
-class Colorscheme(AbstractConfig[ColorschemeConfig, DttrColorscheme]):
+class ColorschemeData(TypedDict):
+    colors: DttrColorscheme
+    custom: Optional[Dict[str, Any]]
+
+
+class Colorscheme(AbstractConfig[ColorschemeConfig, ColorschemeData]):
     def load_cfg(self):
-        self._cfg = load_toml_cfg_model(self.cfg_file, ColorschemeConfig)
+        self.cfg = load_toml_cfg_model(self.cfg_file, ColorschemeConfig)
 
     def compute_data(self):
         if not self.cfg.extends:
-            self._data = compute_colors(self.cfg.colors)
+            self.data = {
+                "colors": compute_colors(self.cfg.colors),
+                "custom": self.cfg.custom,
+            }
 
-        # TODO: Also inherit custom data
         colors_dict = {}
+        custom_dict = {}
         for colorscheme in reversed(self.parents):
             colors_dict = deep_merge(colors_dict, colorscheme.cfg.colors.dict())
+            custom_dict = deep_merge(custom_dict, colorscheme.cfg.custom)
 
-        self._data = compute_colors(ParsedColorschemes.parse_obj(colors_dict))
+        self.data = {
+            "colors": compute_colors(ParsedColorschemes.parse_obj(colors_dict)),
+            "custom": custom_dict,
+        }
 
     @cached_property
     def parents(self):
         return self._get_parents(get_colorschemes, [self])
 
     def print_data(self):
-        colors = self.data
+        colors = self.data["colors"]
 
+        click.secho(f"Colors from {self.name}\n", fg="blue", bold=True)
         for color, value in colors.dict().items():
             c = cast(HEX, HEX(value))
             r, g, b, = (
@@ -68,10 +81,19 @@ class Colorscheme(AbstractConfig[ColorschemeConfig, DttrColorscheme]):
             )
 
             rgb = f"RGB({r : >3}, {g : >3}, {b : >3})"
-            click.secho(
-                f"  {color : <10} - {str(c) : <7} - {rgb : <20}",
-                fg=("white" if c.brightness() < 0.5 else "black"),
-                bg=(r, g, b),
+            click.echo(
+                "  "
+                + click.style(
+                    f"  {color : <10} - {str(c) : <7} - {rgb : <20}",
+                    fg=("white" if c.brightness() < 0.5 else "black"),
+                    bg=(r, g, b),
+                )
+            )
+
+        click.secho(f"\nCustom variables from {self.name}\n", fg="blue", bold=True)
+        for key, value in self.data["custom"].items():
+            click.echo(
+                f"  {click.style(key, fg='yellow')} -> {click.style(value, fg='green')}"
             )
 
 

@@ -2,12 +2,22 @@ from abc import ABCMeta, abstractmethod
 from functools import cached_property
 from pathlib import Path
 from pydantic import BaseModel
-from typing import Dict, List, Callable, Optional, Type, Union, TypeVar, Generic
+from typing import (
+    Dict,
+    List,
+    Callable,
+    Optional,
+    Type,
+    TypedDict,
+    Union,
+    TypeVar,
+    Generic,
+)
 import click
 
 A = TypeVar("A", bound="AbstractConfig")
 S = TypeVar("S", bound="BaseSchema")
-D = TypeVar("D", bound=Union[BaseModel, List, Dict])
+D = TypeVar("D", bound=Union[TypedDict, BaseModel, List, Dict])
 
 
 class BaseSchema(BaseModel):
