@@ -1,8 +1,7 @@
-from dttr.utils.abstractcfg import AbstractConfig
-from functools import cache
-import sys
 import os
 import re
+import sys
+from functools import cache
 from pathlib import Path
 from typing import (
     Callable,
@@ -11,17 +10,19 @@ from typing import (
     Optional,
     Tuple,
     Type,
-    TypeVar,
     TypedDict,
+    TypeVar,
     Union,
     cast,
 )
-import click
 
+import click
 import toml
 from pydantic.error_wrappers import ValidationError
 from pydantic.main import BaseModel
 from toml import TomlDecodeError
+
+from dttr.utils.abstractcfg import AbstractConfig
 
 
 def get_path_from_env(env_vars: List[Union[str, Tuple[str, bool]]]) -> str:

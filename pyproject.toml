@@ -17,6 +17,7 @@ pytest = "^5.2"
 black = {version = "^21.5b2", allow-prereleases = true}
 flake8 = "^3.9.2"
 pre-commit = "^2.13.0"
+isort = {extras = ["pyproject"], version = "^5.9.3"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -28,3 +29,7 @@ dttr = "cli:cli"
 [tool.black]
 target-version = ['py39']
 include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3

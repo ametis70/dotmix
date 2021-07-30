@@ -1,5 +1,6 @@
-from . import deep_merge, load_toml_cfg_model
 from pydantic.main import BaseModel
+
+from . import deep_merge, load_toml_cfg_model
 from .abstractcfg import AbstractConfig, BaseSchema
 
 

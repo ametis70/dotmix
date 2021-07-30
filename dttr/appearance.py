@@ -1,7 +1,9 @@
-from typing import Dict
-from dttr.utils import FilesDict, get_all_configs, get_config_by_id, get_config_files
-from dttr.config import get_data_dir
 from functools import cache, cached_property
+from typing import Dict
+
+from dttr.config import get_data_dir
+from dttr.utils import SettingsDict, get_all_configs, get_config_by_id, get_config_files
+
 from .utils.basiccfg import BasicConfig
 
 
@@ -15,7 +17,7 @@ def get_appearances_dir():
     return get_data_dir() / "themes"
 
 
-def get_appearance_files() -> FilesDict:
+def get_appearance_files() -> SettingsDict:
     return get_config_files(get_appearances_dir())
 
 

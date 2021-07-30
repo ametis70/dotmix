@@ -1,11 +1,12 @@
-from functools import cached_property
-
-import click
-from dttr.utils.abstractcfg import AbstractConfig, BaseSchema
 import os
+from functools import cached_property
 from pathlib import Path
 from typing import Dict, List, Optional
+
+import click
 from pydantic import BaseModel
+
+from dttr.utils.abstractcfg import AbstractConfig, BaseSchema
 
 from .config import get_data_dir
 from .utils import (

@@ -4,16 +4,8 @@ from pathlib import Path
 from typing import Any, Dict, Literal, Optional, TypedDict, cast
 
 import click
-from .colp import HEX
 
-from .utils import (
-    make_alt_color,
-    make_alt_color_inverse,
-    make_average_color,
-    make_brown_from_orange,
-    make_orange_from_yellow,
-)
-
+from dttr.config import get_config, get_data_dir
 from dttr.utils import (
     SettingsDict,
     deep_merge,
@@ -22,14 +14,21 @@ from dttr.utils import (
     get_config_files,
     load_toml_cfg_model,
 )
-from dttr.utils.abstractcfg import BaseSchema, AbstractConfig
-from dttr.config import get_config, get_data_dir
+from dttr.utils.abstractcfg import AbstractConfig, BaseSchema
 
+from .colp import HEX
 from .models import (
-    ParsedColorschemes,
-    DttrColorscheme,
-    TerminalColorscheme,
     Base16Colorscheme,
+    DttrColorscheme,
+    ParsedColorschemes,
+    TerminalColorscheme,
+)
+from .utils import (
+    make_alt_color,
+    make_alt_color_inverse,
+    make_average_color,
+    make_brown_from_orange,
+    make_orange_from_yellow,
 )
 
 

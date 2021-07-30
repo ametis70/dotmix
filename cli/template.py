@@ -1,10 +1,10 @@
 import click
 
 from dttr.template import (
-    get_templates,
-    get_template_by_name,
-    print_merged_template_files,
     get_merged_template_from_extends,
+    get_template_by_name,
+    get_templates,
+    print_merged_template_files,
 )
 
 from .cli import cli

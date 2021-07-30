@@ -1,8 +1,8 @@
 import click
 
-from .cli import cli
-
 from dttr import colorscheme as lib
+
+from .cli import cli
 
 
 @cli.group()

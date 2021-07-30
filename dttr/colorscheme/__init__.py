@@ -1,8 +1,8 @@
 from .models import (
     Base16Colorscheme,
-    TerminalColorscheme,
     DttrColorscheme,
     ParsedColorschemes,
+    TerminalColorscheme,
 )
 
 Base16Colorscheme = Base16Colorscheme

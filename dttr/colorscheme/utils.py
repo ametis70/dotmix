@@ -2,7 +2,8 @@ import sys
 from typing import Callable, List, Optional, cast
 
 import click
-from .colp import RGB, HEX
+
+from .colp import HEX, RGB
 
 
 def check_hex(func: Callable[[List[HEX]], str]):
