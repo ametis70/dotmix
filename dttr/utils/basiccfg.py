@@ -9,6 +9,10 @@ class BasicConfig(AbstractConfig[BaseSchema, BaseModel]):
         self.cfg = load_toml_cfg_model(self.cfg_file, BaseSchema)
 
     def compute_data(self):
+        if not self.cfg.custom:
+            self.data = BaseModel.construct({})
+            return
+
         if not self.cfg.extends:
             self.data = BaseModel.construct(**self.cfg.custom)
 
