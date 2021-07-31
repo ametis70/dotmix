@@ -156,6 +156,7 @@ def get_config_files(dir: Path):
 
 
 A = TypeVar("A", bound=AbstractConfig)
+GenericsSettingGetter = Callable[[str], Optional[A]]
 
 
 def get_config_by_id(id: str, files: SettingsDict, cls: Type[A]) -> Optional[A]:
@@ -170,7 +171,7 @@ def get_config_by_id(id: str, files: SettingsDict, cls: Type[A]) -> Optional[A]:
 
 
 def get_all_configs(
-    files: SettingsDict, getter: Callable[[str], Optional[A]]
+    files: SettingsDict, getter: GenericsSettingGetter[A]
 ) -> Dict[str, A]:
     cfgs: Dict[str, A] = {}
 

@@ -1,5 +1,5 @@
 from functools import cache, cached_property
-from typing import Dict
+from typing import Dict, Optional
 
 from dttr.config import get_data_dir
 from dttr.utils import SettingsDict, get_all_configs, get_config_by_id, get_config_files
@@ -26,5 +26,5 @@ def get_appearances() -> Dict[str, Appearance]:
 
 
 @cache
-def get_appearance_by_id(id: str):
+def get_appearance_by_id(id: str) -> Optional[Appearance]:
     return get_config_by_id(id, get_appearance_files(), Appearance)
