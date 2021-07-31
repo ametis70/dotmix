@@ -181,3 +181,13 @@ def get_all_configs(
             cfgs[name] = c
 
     return cfgs
+
+
+def print_key_values(dict: Optional[Dict]) -> None:
+    if not dict:
+        return
+
+    for key, value in dict.items():
+        click.echo(
+            f"  {click.style(key, fg='yellow')} -> {click.style(value, fg='green')}"
+        )

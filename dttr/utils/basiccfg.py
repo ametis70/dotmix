@@ -1,6 +1,6 @@
 from pydantic.main import BaseModel
 
-from . import deep_merge, load_toml_cfg_model
+from . import deep_merge, load_toml_cfg_model, print_key_values
 from .abstractcfg import AbstractConfig, BaseSchema
 
 
@@ -10,7 +10,7 @@ class BasicConfig(AbstractConfig[BaseSchema, BaseModel]):
 
     def compute_data(self):
         if not self.cfg.custom:
-            self.data = BaseModel.construct({})
+            self.data = BaseModel.construct(**{})
             return
 
         if not self.cfg.extends:
@@ -23,5 +23,4 @@ class BasicConfig(AbstractConfig[BaseSchema, BaseModel]):
         self.data = BaseModel.construct(**data_dict)
 
     def print_data(self):
-        for d in self.data:
-            print(d)
+        print_key_values(self.data.dict())

@@ -13,6 +13,7 @@ from dttr.utils import (
     get_config_by_id,
     get_config_files,
     load_toml_cfg_model,
+    print_key_values,
 )
 from dttr.utils.abstractcfg import AbstractConfig, BaseSchema
 
@@ -95,10 +96,7 @@ class Colorscheme(AbstractConfig[ColorschemeConfig, ColorschemeData]):
             return
 
         click.secho(f"\nCustom variables from {self.name}\n", fg="blue", bold=True)
-        for key, value in custom.items():
-            click.echo(
-                f"  {click.style(key, fg='yellow')} -> {click.style(value, fg='green')}"
-            )
+        print_key_values(custom)
 
 
 def get_colorschemes_dir() -> Path:
