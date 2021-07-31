@@ -7,17 +7,18 @@ from pydantic import BaseModel
 
 from .utils import get_path_from_env, load_toml_cfg_model
 
+DefaultSettingType = Literal[
+    "colorscheme", "typography", "fileset", "appearance", "pre_hook", "post_hook"
+]
+
 
 class DefaultsConfig(BaseModel):
-    template: Optional[str]
-    theme: Optional[str]
-    colors: Optional[str]
-    fonts: Optional[str]
-
-
-class HooksConfig(BaseModel):
-    pre: Optional[str]
-    post: Optional[str]
+    appearance: Optional[str]
+    typography: Optional[str]
+    colorscheme: Optional[str]
+    fileset: Optional[str]
+    pre_hook: Optional[str]
+    post_hook: Optional[str]
 
 
 class GeneralConfig(BaseModel):
@@ -32,7 +33,6 @@ class ColorsConfig(BaseModel):
 class Config(BaseModel):
     general: GeneralConfig
     defaults: Optional[DefaultsConfig]
-    hooks: Optional[HooksConfig]
     colors: ColorsConfig
 
 
@@ -74,6 +74,16 @@ def get_config() -> Config:
     else:
         # TODO: Add error message
         sys.exit(1)
+
+
+def get_default_setting(type: DefaultSettingType) -> Optional[str]:
+    v: Optional[str] = None
+    try:
+        v = get_config().defaults.dict()[type]
+    except KeyError:
+        pass
+    finally:
+        return v
 
 
 def create_config(
