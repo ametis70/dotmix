@@ -11,7 +11,7 @@ import chevron
 import click
 
 from dttr.appearance import Appearance, get_appearance_by_id
-from dttr.colorscheme.colorscheme import Colorscheme, get_colorscheme_by_id
+from dttr.colorscheme import Colorscheme, get_colorscheme_by_id
 from dttr.config import (
     DefaultSettingType,
     get_data_dir,

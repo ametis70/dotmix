@@ -1,5 +1,4 @@
-from . import config, fileset, utils
-from .colorscheme import colorscheme
+from . import colorscheme, config, fileset, utils
 
 utils = utils
 config = config
