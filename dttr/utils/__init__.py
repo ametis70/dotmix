@@ -183,11 +183,13 @@ def get_all_configs(
     return cfgs
 
 
+def print_pair(lhs: str, rhs: str):
+    click.echo(f"  {click.style(lhs, fg='yellow')} -> {click.style(rhs, fg='green')}")
+
+
 def print_key_values(dict: Optional[Dict]) -> None:
     if not dict:
         return
 
     for key, value in dict.items():
-        click.echo(
-            f"  {click.style(key, fg='yellow')} -> {click.style(value, fg='green')}"
-        )
+        print_pair(key, value)
