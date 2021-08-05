@@ -20,7 +20,12 @@ from dttr.config import (
 )
 from dttr.fileset import FileModel, FileSet, get_fileset_by_id
 from dttr.typography import Typography, get_typography_by_id
-from dttr.utils import A, GenericsSettingGetter, print_key_values, print_pair
+from dttr.utils import (
+    AbstractConfigType,
+    GenericSettingsGetter,
+    print_key_values,
+    print_pair,
+)
 
 
 def get_out_dir():
@@ -105,9 +110,9 @@ def print_modified_files(modified_files: List[str]):
 def get_settings(
     field: DefaultSettingType,
     id: Optional[str],
-    getter: GenericsSettingGetter[A],
+    getter: GenericSettingsGetter[AbstractConfigType],
     use_defaults: bool,
-) -> Optional[A]:
+) -> Optional[AbstractConfigType]:
     if not id:
         if not use_defaults:
             click.secho(

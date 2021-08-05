@@ -22,7 +22,7 @@ from pydantic.error_wrappers import ValidationError
 from pydantic.main import BaseModel
 from toml import TomlDecodeError
 
-from dttr.utils.abstractcfg import AbstractConfig
+from dttr.utils.abstractcfg import AbstractConfigType
 
 
 def get_path_from_env(env_vars: List[Union[str, Tuple[str, bool]]]) -> str:
@@ -155,11 +155,12 @@ def get_config_files(dir: Path):
     return files_dict
 
 
-A = TypeVar("A", bound=AbstractConfig)
-GenericsSettingGetter = Callable[[str], Optional[A]]
+GenericSettingsGetter = Callable[[str], Optional[AbstractConfigType]]
 
 
-def get_config_by_id(id: str, files: SettingsDict, cls: Type[A]) -> Optional[A]:
+def get_config_by_id(
+    id: str, files: SettingsDict, cls: Type[AbstractConfigType]
+) -> Optional[AbstractConfigType]:
     try:
         colorscheme_file = files[id]
         id = colorscheme_file["id"]
@@ -171,9 +172,9 @@ def get_config_by_id(id: str, files: SettingsDict, cls: Type[A]) -> Optional[A]:
 
 
 def get_all_configs(
-    files: SettingsDict, getter: GenericsSettingGetter[A]
-) -> Dict[str, A]:
-    cfgs: Dict[str, A] = {}
+    files: SettingsDict, getter: GenericSettingsGetter[AbstractConfigType]
+) -> Dict[str, AbstractConfigType]:
+    cfgs: Dict[str, AbstractConfigType] = {}
 
     for name in files.keys():
         c = getter(name)

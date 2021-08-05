@@ -16,23 +16,25 @@ from typing import (
 import click
 from pydantic import BaseModel
 
-A = TypeVar("A", bound="AbstractConfig")
-S = TypeVar("S", bound="BaseSchema")
-D = TypeVar("D", bound=Union[TypedDict, BaseModel, List, Dict])
+AbstractConfigType = TypeVar("AbstractConfigType", bound="AbstractConfig")
+BaseSchemaType = TypeVar("BaseSchemaType", bound="BaseSchema")
+DataType = TypeVar("DataType", bound=Union[TypedDict, BaseModel, List, Dict])
+
+CustomDictTypes = Union[str, bool, int, List, Dict]
 
 
 class BaseSchema(BaseModel):
     name: str
     extends: Optional[str]
-    custom: Optional[Dict[str, Union[str, bool, int, List, Dict]]]
+    custom: Optional[Dict[str, CustomDictTypes]]
 
 
-class AbstractConfig(Generic[S, D], metaclass=ABCMeta):
+class AbstractConfig(Generic[BaseSchemaType, DataType], metaclass=ABCMeta):
     id: str
     name: str
     cfg_file: Path
-    _data: Optional[D]
-    _cfg: Optional[S]
+    _data: Optional[DataType]
+    _cfg: Optional[BaseSchemaType]
     _parents: Optional[List[BaseModel]]
 
     def __init__(self, id: str, name: str, cfg_file: Path):
@@ -52,14 +54,14 @@ class AbstractConfig(Generic[S, D], metaclass=ABCMeta):
         pass
 
     @property
-    def cfg(self) -> Optional[S]:
+    def cfg(self) -> Optional[BaseSchemaType]:
         if not self._cfg:
             self.load_cfg()
 
         return self._cfg
 
     @cfg.setter
-    def cfg(self, value: S) -> None:
+    def cfg(self, value: BaseSchemaType) -> None:
         self._cfg = value
 
     @property
@@ -70,7 +72,7 @@ class AbstractConfig(Generic[S, D], metaclass=ABCMeta):
         return self._data
 
     @data.setter
-    def data(self, value: D) -> None:
+    def data(self, value: DataType) -> None:
         self._data = value
 
     @abstractmethod
@@ -85,16 +87,16 @@ class AbstractConfig(Generic[S, D], metaclass=ABCMeta):
 
     @cached_property
     @abstractmethod
-    def parents(self) -> List[A]:
+    def parents(self) -> List[AbstractConfigType]:
         """Get parents recursively"""
         pass
 
     @classmethod
     def _get_parents(
-        cls: Type[A],
-        get_all_configs: Callable[[], Dict[str, A]],
-        configs: List[A],
-    ) -> List[A]:
+        cls: Type[AbstractConfigType],
+        get_all_configs: Callable[[], Dict[str, AbstractConfigType]],
+        configs: List[AbstractConfigType],
+    ) -> List[AbstractConfigType]:
         """Filters list returned by `get_all_configs()` that are parents.
 
         This is meant to be called in `parents` property getter with a
