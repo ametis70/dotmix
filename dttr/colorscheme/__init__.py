@@ -49,9 +49,9 @@ class Colorscheme(AbstractConfig[ColorschemeConfig, ColorschemeData]):
 
     def compute_data(self):
         if not self.cfg.extends:
-            self.data = {
+            self.data: ColorschemeData = {
                 "colors": compute_colors(self.cfg.colors),
-                "custom": self.cfg.custom,
+                "custom": self.cfg.custom or {},
             }
 
         colors_dict = {}
