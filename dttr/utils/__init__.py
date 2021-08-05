@@ -157,13 +157,13 @@ def get_config_by_id(
     id: str, files: SettingsDict, cls: Type[AbstractConfigType]
 ) -> Optional[AbstractConfigType]:
     try:
-        colorscheme_file = files[id]
-        id = colorscheme_file["id"]
-        name = colorscheme_file["name"]
-        path = colorscheme_file["path"]
+        file = files[id]
+        id = file["id"]
+        name = file["name"]
+        path = file["path"]
         return cls(id, name, path)
     except KeyError:
-        click.echo(f'Theme "{id}" not found', err=True)
+        print_err(f'{cls.__name__} "{id}" not found')
 
 
 def get_all_configs(
