@@ -22,6 +22,7 @@ from pydantic.error_wrappers import ValidationError
 from pydantic.main import BaseModel
 from toml import TomlDecodeError
 
+from dttr.config import get_verbose
 from dttr.utils.abstractcfg import AbstractConfigType
 
 
@@ -63,7 +64,7 @@ def get_path_from_env(env_vars: List[Union[str, Tuple[str, bool]]]) -> str:
                 value += "/dttr/"
             return value
 
-    print(f"Error: any of the following env vars must be set:\n{print_env_vars()}")
+    print_err(f"Any of the following env vars must be set:\n{print_env_vars()}")
     sys.exit(1)
 
 
@@ -77,19 +78,16 @@ def load_toml_cfg(path: Path) -> Optional[Dict]:
         cfg = cast(Dict, toml.loads(content))
 
         if not cfg:
-            click.echo(f"Warning: {path} exist but it's empty", err=True)
+            print_wrn(f"{path} exist but it's empty")
 
     except FileNotFoundError:
-        click.echo(f"Error: {path} does not exist", err=True)
-        sys.exit(1)
+        print_err(f"{path} does not exist", True)
 
     except PermissionError:
-        click.echo(f"Error: cannot access {path} due to wrong permissions", err=True)
-        sys.exit(1)
+        print_err(f"Cannot access {path} due to wrong permissions", True)
 
     except TomlDecodeError:
-        click.echo(f"Error: invalid TOML syntax in {path}", err=True)
-        sys.exit(1)
+        print_err(f"Invalid TOML syntax in {path}", True)
 
     finally:
         if fd and not fd.closed:
@@ -107,10 +105,7 @@ def load_toml_cfg_model(path: Path, model: Type[T]) -> T:
     try:
         model_instance = model.parse_obj(cfg)
     except ValidationError as e:
-        click.echo(
-            f"Error: invalid/missing values found in {path}\n\n{str(e)}",
-            err=True,
-        )
+        print_err(f"invalid/missing values found in {path}\n\n{str(e)}")
         sys.exit(1)
 
     return model_instance
@@ -194,3 +189,18 @@ def print_key_values(dict: Optional[Dict]) -> None:
 
     for key, value in dict.items():
         print_pair(key, value)
+
+
+def print_err(string: str, exit: bool = False):
+    click.secho(f"Error: {string}", fg="red", err=True)
+    if exit:
+        sys.exit(1)
+
+
+def print_wrn(string: str):
+    click.secho(f"Warning: {string}", fg="warning", err=True)
+
+
+def print_verbose(string: str, **kwargs):
+    if get_verbose():
+        click.secho(string, **kwargs)

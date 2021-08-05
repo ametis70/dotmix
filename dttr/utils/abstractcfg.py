@@ -13,8 +13,9 @@ from typing import (
     Union,
 )
 
-import click
 from pydantic import BaseModel
+
+from dttr.utils import print_err, print_wrn
 
 AbstractConfigType = TypeVar("AbstractConfigType", bound="AbstractConfig")
 BaseSchemaType = TypeVar("BaseSchemaType", bound="BaseSchema")
@@ -114,10 +115,8 @@ class AbstractConfig(Generic[BaseSchemaType, DataType], metaclass=ABCMeta):
         )
 
         if parent is None:
-            click.secho(
-                f"Warning: {last_cfg.name} tried to extend {last_cfg.extends} but it doesn't exists",  # noqa: E501
-                err=True,
-                fg="yellow",
+            print_wrn(
+                f"{last_cfg.name} tried to extend {last_cfg.extends} but it doesn't exists",  # noqa: E501
             )
             return configs
 
@@ -125,10 +124,9 @@ class AbstractConfig(Generic[BaseSchemaType, DataType], metaclass=ABCMeta):
             if parent in configs:
                 raise RecursionError
         except RecursionError:
-            click.secho(
-                f"Error: {last_cfg.name} tried to extend {last_cfg.extends} but it was extended before",  # noqa: E501
-                err=True,
-                fg="red",
+            print_err(
+                f"{last_cfg.name} tried to extend {last_cfg.extends} but it was extended before",  # noqa: E501
+                True,
             )
 
         configs.append(parent)

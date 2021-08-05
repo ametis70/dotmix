@@ -1,7 +1,6 @@
-import sys
 from typing import Callable, List, Optional, cast
 
-import click
+from dttr.utils import print_err
 
 from .colp import HEX, RGB
 
@@ -14,18 +13,14 @@ def check_hex(func: Callable[[List[HEX]], str]):
                 if not arg:
                     raise ValueError(func.__name__)
             except ValueError as f:
-                click.secho(f"Error: Called {f} with empty color", fg="red", err=True)
-                sys.exit(1)
+                print_err(f"Called {f} with empty color", True)
 
             try:
                 c = cast(HEX, HEX(arg))
             except ValueError:
-                click.secho(
-                    f"{arg} is not a valid hex color string", fg="red", err=True
-                )
-                sys.exit(1)
+                print_err(f"{arg} is not a valid hex color string", True)
 
-            colors.append(c)
+            colors.append(c)  # type: ignore
 
         return func(colors)
 
@@ -67,9 +62,8 @@ def make_average_color(colors: List[HEX]) -> str:
         a = colors[0]
         b = colors[1]
     except IndexError:
-        click.secho(
-            "make_average_color requires a list of two items", fg="red", err=True
-        )
-        sys.exit(1)
+        print_err("make_average_color requires a list of two items", True)
 
-    return str(RGB((a.r + b.r) / 2, (a.g + b.g) / 2, (a.b + b.b) / 2).to(HEX))
+    return str(
+        RGB((a.r + b.r) / 2, (a.g + b.g) / 2, (a.b + b.b) / 2).to(HEX)  # type: ignore
+    )

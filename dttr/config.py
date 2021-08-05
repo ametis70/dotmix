@@ -6,7 +6,7 @@ from typing import Literal, Optional
 import toml
 from pydantic import BaseModel
 
-from .utils import get_path_from_env, load_toml_cfg_model
+from .utils import get_path_from_env, load_toml_cfg_model, print_err
 
 DefaultSettingType = Literal[
     "colorscheme", "typography", "fileset", "appearance", "pre_hook", "post_hook"
@@ -88,7 +88,7 @@ def get_config() -> Config:
         return cfg
 
     else:
-        # TODO: Add error message
+        print_err("Couldn't find config file")
         sys.exit(1)
 
 
@@ -125,7 +125,7 @@ def create_config(
     config_file = config_path / filename
 
     if not force and config_file.exists():
-        print(f"Error: {filename} exists")
+        print_err(f"Error: {filename} exists")
         return
 
     if not data_path:

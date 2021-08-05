@@ -23,8 +23,11 @@ from dttr.typography import Typography, get_typography_by_id
 from dttr.utils import (
     AbstractConfigType,
     GenericSettingsGetter,
+    print_err,
     print_key_values,
     print_pair,
+    print_verbose,
+    print_wrn,
 )
 
 
@@ -59,9 +62,9 @@ def run_hook(hook: str) -> int:
         return_code = p.returncode
 
     except FileNotFoundError:
-        click.secho(f"Error: Hook {hook_file} doesn't exist", fg="red", err=True)
+        print_err(f"Hook {hook_file} doesn't exist")
     except PermissionError:
-        click.secho(f"Error: Wrong permissions on {hook_file}", fg="red", err=True)
+        print_err(f"Wrong permissions on {hook_file}")
     finally:
         return return_code
 
@@ -104,7 +107,7 @@ def print_modified_files(modified_files: List[str]):
     if modified_files:
         click.secho("The following files where modified:\n", fg="yellow")
         for file in modified_files:
-            click.secho(file, fg="yellow", err=True)
+            click.secho(file, fg="yellow")
 
 
 def get_settings(
@@ -115,22 +118,17 @@ def get_settings(
 ) -> Optional[AbstractConfigType]:
     if not id:
         if not use_defaults:
-            click.secho(
-                f"Warning: Skipping {field} (No id provided and not using default)"
-            )
+            print_wrn(f"Skipping {field} (No id provided and not using default)")
             return None
 
         default_id = get_default_setting(field)
         if not default_id:
-            click.secho(
-                f"Warning: Skipping {field} (No id provided and default not set)"
-            )
+            print_wrn(f"Skipping {field} (No id provided and default not set)")
             return None
 
         settings = getter(default_id)
         if not settings:
-            click.secho(f"Error: Invalid id for {field} from defaults")
-            sys.exit(1)
+            print_err(f"Invalid id for {field} from defaults", True)
 
         click.secho(f"Using default settings ({settings.id}) for {field} from defaults")
         return settings
@@ -138,8 +136,7 @@ def get_settings(
     else:
         settings = getter(id)
         if not settings:
-            click.secho(f"Error: Settings {id} not found for {field}")
-            sys.exit(1)
+            print_err(f"Settings {id} not found for {field}", True)
 
         return settings
 
@@ -149,8 +146,7 @@ def render_file(file: FileModel, reltaive_path: str, out_dir: str, vars: Dict):
         rendered = cast(str, chevron.render(f, vars))
         out_file = Path(out_dir) / reltaive_path
         os.makedirs(out_file.parent, exist_ok=True)
-        if get_verbose():
-            click.echo(f"Rendering file: {str(out_file)}")
+        print_verbose(f"Rendering file: {str(out_file)}")
         with out_file.open("w", encoding="utf-8") as out:
             out.write(rendered)
 
@@ -199,18 +195,15 @@ def apply(
     fileset = get_settings("fileset", fileset_id, get_fileset_by_id, use_defaults)
 
     if not fileset:
-        click.secho("Error: No fileset specified")
-        sys.exit(1)
+        print_err("No fileset specified", True)
 
     modified_files = verify_checksums()
     print_modified_files(modified_files)
     if not force:
-        click.secho(
-            "\nError: Please discard the changes or run with -f/--force flag",
-            fg="red",
-            err=True,
+        print_err(
+            "\nPlease discard the changes or run with -f/--force flag",
+            True,
         )
-        sys.exit(1)
 
     colorscheme = get_settings(
         "colorscheme", colorscheme_id, get_colorscheme_by_id, use_defaults
@@ -250,7 +243,7 @@ def apply(
         if click.confirm(f"Continue? {overwrite_text}", abort=True):
             pass
     elif not interactive and get_verbose():
-        click.echo("Info: Running non interactively")
+        click.echo("Info: Running non-interactively")
 
     click.echo("")
 
@@ -261,10 +254,7 @@ def apply(
             click.echo(f"Running pre hook: {pre_hook}")
             code = run_hook(pre_hook)
             if code != 0:
-                click.secho(
-                    f"Error: Hook {pre_hook} finished with an error", fg="red", err=True
-                )
-                sys.exit(1)
+                print_err(f"Hook {pre_hook} finished with an error", True)
 
         out_dir = get_out_dir()
         backup_dir = get_out_backup_dir()
@@ -284,11 +274,7 @@ def apply(
             click.echo(f"Running post hook: {post_hook}")
             code = run_hook(post_hook)
             if code != 0:
-                click.secho(
-                    f"Error: Hook {post_hook} finished with an error",
-                    fg="red",
-                    err=True,
-                )
+                print_err(f"Hook {post_hook} finished with an error")
                 click.echo("Restoring backup of out files")
                 shutil.move(backup_dir, out_dir)
                 sys.exit(1)
