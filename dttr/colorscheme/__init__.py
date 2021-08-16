@@ -5,6 +5,7 @@ from typing import Any, Dict, Literal, Optional, TypedDict, cast
 
 import click
 
+from dttr.abstractcfg import AbstractConfig, BaseSchema
 from dttr.config import get_config, get_data_dir
 from dttr.utils import (
     SettingsDict,
@@ -15,7 +16,6 @@ from dttr.utils import (
     load_toml_cfg_model,
     print_key_values,
 )
-from dttr.utils.abstractcfg import AbstractConfig, BaseSchema
 
 from .colp import HEX
 from .models import (

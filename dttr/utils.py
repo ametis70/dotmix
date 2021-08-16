@@ -22,8 +22,8 @@ from pydantic.error_wrappers import ValidationError
 from pydantic.main import BaseModel
 from toml import TomlDecodeError
 
-from dttr.config import get_verbose
-from dttr.utils.abstractcfg import AbstractConfigType
+import dttr.config
+from dttr.abstractcfg import AbstractConfigType
 
 
 def get_path_from_env(env_vars: List[Union[str, Tuple[str, bool]]]) -> str:
@@ -198,9 +198,9 @@ def print_err(string: str, exit: bool = False):
 
 
 def print_wrn(string: str):
-    click.secho(f"Warning: {string}", fg="warning", err=True)
+    click.secho(f"Warning: {string}", fg="yellow", err=True)
 
 
 def print_verbose(string: str, **kwargs):
-    if get_verbose():
+    if dttr.config.get_verbose():
         click.secho(string, **kwargs)

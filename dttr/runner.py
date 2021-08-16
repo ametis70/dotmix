@@ -18,7 +18,7 @@ from dttr.config import (
     get_default_setting,
     get_verbose,
 )
-from dttr.fileset import FileModel, FileSet, get_fileset_by_id
+from dttr.fileset import FileModel, Fileset, get_fileset_by_id
 from dttr.typography import Typography, get_typography_by_id
 from dttr.utils import (
     AbstractConfigType,
@@ -108,6 +108,7 @@ def print_modified_files(modified_files: List[str]):
         click.secho("The following files where modified:\n", fg="yellow")
         for file in modified_files:
             click.secho(file, fg="yellow")
+        click.echo("")
 
 
 def get_settings(
@@ -151,7 +152,7 @@ def render_file(file: FileModel, reltaive_path: str, out_dir: str, vars: Dict):
             out.write(rendered)
 
 
-def render_fileset(fileset: FileSet, out_dir: str, vars: Dict):
+def render_fileset(fileset: Fileset, out_dir: str, vars: Dict):
     for relative_dir, file in fileset.data.items():
         render_file(file, relative_dir, out_dir, vars)
 
@@ -199,9 +200,9 @@ def apply(
 
     modified_files = verify_checksums()
     print_modified_files(modified_files)
-    if not force:
+    if modified_files and not force:
         print_err(
-            "\nPlease discard the changes or run with -f/--force flag",
+            "Please discard the changes or run with -F/--force flag",
             True,
         )
 
@@ -236,9 +237,7 @@ def apply(
 
     if interactive:
         overwrite_text = (
-            ""
-            if not force and not modified_files
-            else "(Previous files will be overwritten)"
+            "(Modified files will be overwritten)" if force and modified_files else ""
         )
         if click.confirm(f"Continue? {overwrite_text}", abort=True):
             pass

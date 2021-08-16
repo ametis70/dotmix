@@ -1,7 +1,7 @@
 from pydantic.main import BaseModel
 
-from . import deep_merge, load_toml_cfg_model, print_key_values
 from .abstractcfg import AbstractConfig, BaseSchema
+from .utils import deep_merge, load_toml_cfg_model, print_key_values
 
 
 class BasicConfig(AbstractConfig[BaseSchema, BaseModel]):

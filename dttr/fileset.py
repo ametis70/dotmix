@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 import click
 from pydantic import BaseModel
 
-from dttr.utils.abstractcfg import AbstractConfig, BaseSchema
+from dttr.abstractcfg import AbstractConfig, BaseSchema
 
 from .config import get_data_dir
 from .utils import (
@@ -22,7 +22,7 @@ from .utils import (
 class FileModel(BaseModel):
     id: str
     path: Path
-    fileset: "FileSet"
+    fileset: "Fileset"
 
     class Config:
         arbitrary_types_allowed = True
@@ -31,12 +31,12 @@ class FileModel(BaseModel):
 FileModelDict = Dict[str, FileModel]
 
 
-class FileSet(AbstractConfig[BaseSchema, FileModelDict]):
+class Fileset(AbstractConfig[BaseSchema, FileModelDict]):
     def load_cfg(self):
         self._cfg = load_toml_cfg_model(self.cfg_file, BaseSchema)
 
     @cached_property
-    def parents(self) -> List["FileSet"]:
+    def parents(self) -> List["Fileset"]:
         return self._get_parents(get_filesets, [self])
 
     def compute_data(self) -> None:
@@ -89,15 +89,15 @@ def get_fileset_settings():
     return files_settings
 
 
-def get_filesets() -> Dict[str, FileSet]:
+def get_filesets() -> Dict[str, Fileset]:
     return get_all_configs(get_fileset_settings(), get_fileset_by_id)
 
 
-def get_fileset_by_id(id: str) -> Optional[FileSet]:
-    return get_config_by_id(id, get_fileset_settings(), FileSet)
+def get_fileset_by_id(id: str) -> Optional[Fileset]:
+    return get_config_by_id(id, get_fileset_settings(), Fileset)
 
 
-def get_paths_from_fileset(f: FileSet) -> Dict[str, FileModel]:
+def get_paths_from_fileset(f: Fileset) -> Dict[str, FileModel]:
     files: Dict[str, FileModel] = {}
     dir = f.cfg_file.parent
     for (dirpath, _, filenames) in os.walk(dir):

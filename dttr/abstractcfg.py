@@ -15,7 +15,7 @@ from typing import (
 
 from pydantic import BaseModel
 
-from dttr.utils import print_err, print_wrn
+import dttr.utils
 
 AbstractConfigType = TypeVar("AbstractConfigType", bound="AbstractConfig")
 BaseSchemaType = TypeVar("BaseSchemaType", bound="BaseSchema")
@@ -115,7 +115,7 @@ class AbstractConfig(Generic[BaseSchemaType, DataType], metaclass=ABCMeta):
         )
 
         if parent is None:
-            print_wrn(
+            dttr.utils.print_wrn(
                 f"{last_cfg.name} tried to extend {last_cfg.extends} but it doesn't exists",  # noqa: E501
             )
             return configs
@@ -124,7 +124,7 @@ class AbstractConfig(Generic[BaseSchemaType, DataType], metaclass=ABCMeta):
             if parent in configs:
                 raise RecursionError
         except RecursionError:
-            print_err(
+            dttr.utils.print_err(
                 f"{last_cfg.name} tried to extend {last_cfg.extends} but it was extended before",  # noqa: E501
                 True,
             )
