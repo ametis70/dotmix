@@ -1,9 +1,10 @@
 import click
 
-import dttr.config
 from dttr.appearance import get_appearance_by_id, get_appearances
 from dttr.colorscheme import get_colorscheme_by_id, get_colorschemes
+from dttr.config import create_config, scaffold_data_path, set_verbose
 from dttr.fileset import get_fileset_by_id, get_filesets
+from dttr.runner import apply
 from dttr.typography import get_typographies, get_typography_by_id
 
 from .utils import print_setting_names
@@ -36,9 +37,9 @@ def init(force):
         pass
 
     click.echo(f"{'Rei' if force else 'I'}ntializing config")
-    dttr.config.create_config(force=force)
+    create_config(force=force)
     click.echo("Creating data directories")
-    dttr.config.scaffold_data_path()
+    scaffold_data_path()
 
 
 # Fileset
@@ -104,7 +105,7 @@ def typography_show(id):
     get_typography_by_id(id).print_data()
 
 
-# Typography
+# Appearance
 
 
 @cli.group()
@@ -123,3 +124,29 @@ def appearance_list():
 def appearance_show(id):
     """Display variables from appearance"""
     get_appearance_by_id(id).print_data()
+
+
+# Apply
+
+
+@cli.command("apply")
+@click.option("--fileset", "-f")
+@click.option("--typography", "-t")
+@click.option("--appearance", "-a")
+@click.option("--colorscheme", "-c")
+@click.option("--force", "-F", is_flag=True, help="Run even if files changed")
+@click.option("--verbose", "-v", is_flag=True, help="Print additional information")
+def cli_apply(fileset, typography, appearance, colorscheme, force, verbose):
+    """Generate output files from fileset and data"""
+
+    if verbose:
+        set_verbose(True)
+
+    apply(
+        fileset_id=fileset,
+        typography_id=typography,
+        appearance_id=appearance,
+        colorscheme_id=colorscheme,
+        force=force,
+        interactive=True,
+    )
