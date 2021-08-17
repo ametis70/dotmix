@@ -5,17 +5,16 @@ from typing import Any, Dict, Literal, Optional, TypedDict, cast
 
 import click
 
-from dttr.abstractcfg import AbstractConfig, BaseSchema
 from dttr.config import get_config, get_data_dir
-from dttr.utils import (
-    SettingsDict,
-    deep_merge,
+from dttr.data import (
+    AbstractData,
+    DataFileModel,
+    DataFilesDict,
     get_all_configs,
     get_config_by_id,
     get_config_files,
-    load_toml_cfg_model,
-    print_key_values,
 )
+from dttr.utils import deep_merge, load_toml_cfg_model, print_key_values
 
 from .colp import HEX
 from .models import (
@@ -34,7 +33,7 @@ from .utils import (
 )
 
 
-class ColorschemeConfig(BaseSchema):
+class ColorschemeConfig(DataFileModel):
     colors: ParsedColorschemes
 
 
@@ -43,22 +42,22 @@ class ColorschemeData(TypedDict):
     custom: Dict[str, Any]
 
 
-class Colorscheme(AbstractConfig[ColorschemeConfig, ColorschemeData]):
-    def load_cfg(self):
-        self.cfg = load_toml_cfg_model(self.cfg_file, ColorschemeConfig)
+class Colorscheme(AbstractData[ColorschemeConfig, ColorschemeData]):
+    def load_data_file(self):
+        self.file_data = load_toml_cfg_model(self.data_file_path, ColorschemeConfig)
 
     def compute_data(self):
-        if not self.cfg.extends:
+        if not self.file_data.extends:
             self.data: ColorschemeData = {
-                "colors": compute_colors(self.cfg.colors),
-                "custom": self.cfg.custom or {},
+                "colors": compute_colors(self.file_data.colors),
+                "custom": self.file_data.custom or {},
             }
 
         colors_dict = {}
         custom_dict = {}
         for colorscheme in reversed(self.parents):
-            colors_dict = deep_merge(colors_dict, colorscheme.cfg.colors.dict())
-            custom_dict = deep_merge(custom_dict, colorscheme.cfg.custom)
+            colors_dict = deep_merge(colors_dict, colorscheme.file_data.colors.dict())
+            custom_dict = deep_merge(custom_dict, colorscheme.file_data.custom)
 
         self.data = {
             "colors": compute_colors(ParsedColorschemes.parse_obj(colors_dict)),
@@ -103,7 +102,7 @@ def get_colorschemes_dir() -> Path:
     return get_data_dir() / "colors"
 
 
-def get_colorscheme_files() -> SettingsDict:
+def get_colorscheme_files() -> DataFilesDict:
     return get_config_files(get_colorschemes_dir())
 
 

@@ -6,17 +6,16 @@ from typing import Dict, List, Optional
 import click
 from pydantic import BaseModel
 
-from dttr.abstractcfg import AbstractConfig, BaseSchema
-
-from .config import get_data_dir
-from .utils import (
-    SettingsDict,
-    deep_merge,
+from dttr.data import (
+    AbstractData,
+    DataFileModel,
+    DataFilesDict,
     get_all_configs,
     get_config_by_id,
-    load_toml_cfg,
-    load_toml_cfg_model,
 )
+
+from .config import get_data_dir
+from .utils import deep_merge, load_toml_cfg, load_toml_cfg_model
 
 
 class FileModel(BaseModel):
@@ -31,16 +30,16 @@ class FileModel(BaseModel):
 FileModelDict = Dict[str, FileModel]
 
 
-class Fileset(AbstractConfig[BaseSchema, FileModelDict]):
-    def load_cfg(self):
-        self._cfg = load_toml_cfg_model(self.cfg_file, BaseSchema)
+class Fileset(AbstractData[DataFileModel, FileModelDict]):
+    def load_data_file(self):
+        self.file_data = load_toml_cfg_model(self.data_file_path, DataFileModel)
 
     @cached_property
     def parents(self) -> List["Fileset"]:
         return self._get_parents(get_filesets, [self])
 
     def compute_data(self) -> None:
-        if not self.cfg.extends:
+        if not self.file_data.extends:
             self.data = get_paths_from_fileset(self)
 
         file_paths: FileModelDict = {}
@@ -73,7 +72,7 @@ def get_filesets_dir() -> Path:
 
 def get_fileset_settings():
     files_dir = get_filesets_dir()
-    files_settings: SettingsDict = {}
+    files_settings: DataFilesDict = {}
 
     for dir in files_dir.iterdir():
         path = dir / "settings.toml"
@@ -99,7 +98,7 @@ def get_fileset_by_id(id: str) -> Optional[Fileset]:
 
 def get_paths_from_fileset(f: Fileset) -> Dict[str, FileModel]:
     files: Dict[str, FileModel] = {}
-    dir = f.cfg_file.parent
+    dir = f.data_file_path.parent
     for (dirpath, _, filenames) in os.walk(dir):
         if not filenames or any(map(lambda f: f == "settings.toml", filenames)):
             # Skip any files in root directory (i.e. files alongside template.toml)

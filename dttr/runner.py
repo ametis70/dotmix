@@ -12,17 +12,12 @@ import click
 
 from dttr.appearance import Appearance, get_appearance_by_id
 from dttr.colorscheme import Colorscheme, get_colorscheme_by_id
-from dttr.config import (
-    DefaultSettingType,
-    get_data_dir,
-    get_default_setting,
-    get_verbose,
-)
+from dttr.config import DefaultSettingType, get_data_dir, get_default_setting
+from dttr.data import DataClassType, GenericDataGetter
 from dttr.fileset import FileModel, Fileset, get_fileset_by_id
 from dttr.typography import Typography, get_typography_by_id
 from dttr.utils import (
-    AbstractConfigType,
-    GenericSettingsGetter,
+    get_verbose,
     print_err,
     print_key_values,
     print_pair,
@@ -114,9 +109,9 @@ def print_modified_files(modified_files: List[str]):
 def get_settings(
     field: DefaultSettingType,
     id: Optional[str],
-    getter: GenericSettingsGetter[AbstractConfigType],
+    getter: GenericDataGetter[DataClassType],
     use_defaults: bool,
-) -> Optional[AbstractConfigType]:
+) -> Optional[DataClassType]:
     if not id:
         if not use_defaults:
             print_wrn(f"Skipping {field} (No id provided and not using default)")
@@ -247,7 +242,8 @@ def apply(
     click.echo("")
 
     with tempfile.TemporaryDirectory(prefix="dttr_out") as tmp_dir:
-        render_fileset(fileset, tmp_dir, vars)
+        if fileset:
+            render_fileset(fileset, tmp_dir, vars)
 
         if pre_hook:
             click.echo(f"Running pre hook: {pre_hook}")

@@ -2,10 +2,11 @@ import click
 
 from dttr.appearance import get_appearance_by_id, get_appearances
 from dttr.colorscheme import get_colorscheme_by_id, get_colorschemes
-from dttr.config import create_config, scaffold_data_path, set_verbose
+from dttr.config import create_config, scaffold_data_path
 from dttr.fileset import get_fileset_by_id, get_filesets
 from dttr.runner import apply
 from dttr.typography import get_typographies, get_typography_by_id
+from dttr.utils import set_verbose
 
 from .utils import print_setting_names
 

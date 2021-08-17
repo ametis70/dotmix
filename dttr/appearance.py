@@ -1,12 +1,17 @@
 from functools import cache, cached_property
 from typing import Dict, Optional
 
-from dttr.basiccfg import BasicConfig
 from dttr.config import get_data_dir
-from dttr.utils import SettingsDict, get_all_configs, get_config_by_id, get_config_files
+from dttr.data import (
+    BasicData,
+    DataFilesDict,
+    get_all_configs,
+    get_config_by_id,
+    get_config_files,
+)
 
 
-class Appearance(BasicConfig):
+class Appearance(BasicData):
     @cached_property
     def parents(self):
         return self._get_parents(get_appearances, [self])
@@ -16,7 +21,7 @@ def get_appearances_dir():
     return get_data_dir() / "themes"
 
 
-def get_appearance_files() -> SettingsDict:
+def get_appearance_files() -> DataFilesDict:
     return get_config_files(get_appearances_dir())
 
 

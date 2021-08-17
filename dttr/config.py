@@ -1,4 +1,3 @@
-import os
 import sys
 from pathlib import Path
 from typing import Literal, Optional
@@ -6,7 +5,7 @@ from typing import Literal, Optional
 import toml
 from pydantic import BaseModel
 
-from .utils import get_path_from_env, load_toml_cfg_model, print_err
+from dttr.utils import get_path_from_env, load_toml_cfg_model, print_err
 
 DefaultSettingType = Literal[
     "colorscheme", "typography", "fileset", "appearance", "pre_hook", "post_hook"
@@ -49,21 +48,6 @@ def generate_config(data_path: Path) -> str:
     )
 
     return toml.dumps(cfg.dict())
-
-
-VERBOSE = "DTTR_VERBOSE"
-
-
-def get_verbose() -> bool:
-    return bool(os.getenv(VERBOSE))
-
-
-def set_verbose(value: bool) -> None:
-    if value:
-        os.environ[VERBOSE] = "1"
-    else:
-        if os.getenv(VERBOSE):
-            del os.environ[VERBOSE]
 
 
 def get_data_dir() -> Path:

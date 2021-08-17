@@ -1,20 +1,7 @@
 import os
-import re
 import sys
-from functools import cache
 from pathlib import Path
-from typing import (
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TypedDict,
-    TypeVar,
-    Union,
-    cast,
-)
+from typing import Dict, List, Optional, Tuple, Type, TypeVar, Union, cast
 
 import click
 import toml
@@ -22,8 +9,19 @@ from pydantic.error_wrappers import ValidationError
 from pydantic.main import BaseModel
 from toml import TomlDecodeError
 
-import dttr.config
-from dttr.abstractcfg import AbstractConfigType
+VERBOSE = "DTTR_VERBOSE"
+
+
+def get_verbose() -> bool:
+    return bool(os.getenv(VERBOSE))
+
+
+def set_verbose(value: bool) -> None:
+    if value:
+        os.environ[VERBOSE] = "1"
+    else:
+        if os.getenv(VERBOSE):
+            del os.environ[VERBOSE]
 
 
 def get_path_from_env(env_vars: List[Union[str, Tuple[str, bool]]]) -> str:
@@ -122,63 +120,6 @@ def deep_merge(dict1: dict, dict2: dict) -> dict:
     return {k: _val(dict1.get(k), dict2.get(k)) for k in dict1.keys() | dict2.keys()}
 
 
-class SettingsMetadata(TypedDict):
-    id: str
-    name: str
-    path: Path
-
-
-SettingsDict = Dict[str, SettingsMetadata]
-
-
-@cache
-def get_config_files(dir: Path):
-    files_dict: SettingsDict = {}
-
-    files = [f for f in os.listdir(dir) if re.match(r".*\.toml", f)]
-
-    for file in files:
-        path = Path(dir / file)
-
-        cfg = load_toml_cfg(Path(dir / file))
-        name = cfg["name"]
-        id = path.with_suffix("").name
-
-        if cfg and name:
-            files_dict[id] = {"id": id, "path": path, "name": name}
-
-    return files_dict
-
-
-GenericSettingsGetter = Callable[[str], Optional[AbstractConfigType]]
-
-
-def get_config_by_id(
-    id: str, files: SettingsDict, cls: Type[AbstractConfigType]
-) -> Optional[AbstractConfigType]:
-    try:
-        file = files[id]
-        id = file["id"]
-        name = file["name"]
-        path = file["path"]
-        return cls(id, name, path)
-    except KeyError:
-        print_err(f'{cls.__name__} "{id}" not found')
-
-
-def get_all_configs(
-    files: SettingsDict, getter: GenericSettingsGetter[AbstractConfigType]
-) -> Dict[str, AbstractConfigType]:
-    cfgs: Dict[str, AbstractConfigType] = {}
-
-    for name in files.keys():
-        c = getter(name)
-        if c:
-            cfgs[name] = c
-
-    return cfgs
-
-
 def print_pair(lhs: str, rhs: str):
     click.echo(f"  {click.style(lhs, fg='yellow')} -> {click.style(rhs, fg='green')}")
 
@@ -202,5 +143,5 @@ def print_wrn(string: str):
 
 
 def print_verbose(string: str, **kwargs):
-    if dttr.config.get_verbose():
+    if get_verbose():
         click.secho(string, **kwargs)
