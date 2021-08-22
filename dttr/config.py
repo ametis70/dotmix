@@ -1,3 +1,6 @@
+"""Module for reading and writing the configuration"""
+
+
 import sys
 from pathlib import Path
 from typing import Literal, Optional
@@ -7,12 +10,31 @@ from pydantic import BaseModel
 
 from dttr.utils import get_path_from_env, load_toml_cfg_model, print_err
 
+# Types:
+
 DefaultSettingType = Literal[
     "colorscheme", "typography", "fileset", "appearance", "pre_hook", "post_hook"
 ]
+"""Possible keys for ``dttr.config.DefaultsConfig``"""
+
+
+# Models:
 
 
 class DefaultsConfig(BaseModel):
+    """Model for configuring the defaults
+
+    All keys are optional they take an ID (string) as a value
+
+    :param appearance: Appearance ID
+    :param typography: Typography ID
+    :param colorscheme: Colorscheme ID
+    :param fileset: Fileset ID
+    :param pre_hook: Pre hook ID
+    :param post_hook: Post hook ID
+
+    """
+
     appearance: Optional[str]
     typography: Optional[str]
     colorscheme: Optional[str]
@@ -22,22 +44,42 @@ class DefaultsConfig(BaseModel):
 
 
 class GeneralConfig(BaseModel):
+    """General configuration
+
+    :param data_path: Path for the data directory
+    :param out_path: Path for the output files
+
+    """
+
     data_path: str
     out_path: str
 
 
 class ColorsConfig(BaseModel):
+    """Colors configuration
+
+    :param colormode: Default colormode ("terminal" or "base16")
+
+    """
+
     colormode: Literal["terminal", "base16"]
 
 
 class Config(BaseModel):
+    """Root config model. This only holds other models for organizative purposes"""
+
     general: GeneralConfig
     defaults: Optional[DefaultsConfig]
     colors: ColorsConfig
 
 
+# Functions:
+
+
 def generate_config(data_path: Path) -> str:
-    """Returns a valid dttr TOML config (string)"""
+    """Generate the default configuration.
+
+    :return: Returns a valid dttr TOML config"""
 
     cfg = Config(
         general={
@@ -51,20 +93,37 @@ def generate_config(data_path: Path) -> str:
 
 
 def get_data_dir() -> Path:
-    """Get dttr data path"""
+    """Get the data directory's path, where all data files, hooks and output files are
+    stored.
+
+    By default, the path is is ``$XDG_DATA_HOME/dttr``, but it can be modified by
+    setting the environemt variable ``$DTTR_DATA_DIR``.
+
+    :return: Data path
+    """
     env_vars = ["DTTR_DATA_DIR", ("XDG_DATA_HOME", True)]
 
     return Path(get_path_from_env(env_vars))
 
 
 def get_config_dir() -> Path:
-    """Get dttr config path"""
+    """Get the configuration directory's path, where the configuration is stored.
+
+    By default, the path is is ``$XDG_CONFIG_HOME/dttr``, but it can be modified by
+    setting the environemt variable ``$DTTR_CONFIG_DIR``.
+
+    :return: Config path"""
+
     env_vars = ["DTTR_CONFIG_DIR", ("XDG_CONFIG_HOME", True)]
 
     return Path(get_path_from_env(env_vars))
 
 
 def get_config() -> Config:
+    """Reads the configuration file and returns a :class:`dttr.config.Config` instance
+
+    :returns: Parsed configuration model instance
+    """
     config_path = get_config_dir()
     cfg = load_toml_cfg_model(config_path / "config.toml", Config)
 
@@ -77,6 +136,11 @@ def get_config() -> Config:
 
 
 def get_default_setting(type: DefaultSettingType) -> Optional[str]:
+    """Get the value of one key from :class:`dttr.config.DefaultsConfig` if it is
+    defined in the config
+
+    :return: String with the value associated with the key if it exists
+    """
     v: Optional[str] = None
     try:
         v = get_config().defaults.dict()[type]
@@ -95,8 +159,11 @@ def create_config(
 
     This function takes to optional parameters to change the configuration directory and
     data directory, but they are just for testing purposes. To change those values when
-    when using the CLI, modify the DTTR_CONFIG_DIR and DTTR_DATA_DIR environment
-    variables
+    when using the CLI, modify the ``$DTTR_CONFIG_DIR`` and ``$DTTR_DATA_DIR``
+    environment variables
+
+    :param config_path: override the config path returned
+        by :func:`dttr.Config.get_config_dir`
     """
 
     if not config_path:
