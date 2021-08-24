@@ -1,3 +1,9 @@
+"""Base data module.
+
+This module contains all abstract classes, typings and functions that the concrete
+data modules are built upon.
+"""
+
 import os
 import re
 from abc import ABCMeta, abstractmethod
@@ -13,6 +19,7 @@ from typing import (
     TypedDict,
     TypeVar,
     Union,
+    cast,
 )
 
 from pydantic import BaseModel
@@ -26,20 +33,76 @@ from dttr.utils import (
     print_wrn,
 )
 
+# Types:
+
 DataClassType = TypeVar("DataClassType", bound="AbstractData")
+"""Type for classes that extend ``dttr.data.AbstractData``"""
+
 DataFileModelType = TypeVar("DataFileModelType", bound="DataFileModel")
+"""Type for models that extend ``dttr.data.DataFileModel``"""
+
 DataType = TypeVar("DataType", bound=Union[TypedDict, BaseModel, Dict])
+"""This type represent which values the computed data for ```dttr.data.AbstractData``
+can take"""
+
+
 GenericDataGetter = Callable[[str], Optional[DataClassType]]
+"""Callable typing for functions that return instances of subclasses
+of ``dttr.data.AbstractData``"""
+
+
 CustomDictTypes = Union[str, bool, int, List, Dict]
+"""Types for the custom dict of ```dttr.data.DataFileModel```"""
+
+
+class DataFileMetadata(TypedDict):
+    """Typing for the dictionary that returns :func:`dttr.data.get_config_files`"""
+
+    id: str
+    name: str
+    path: Path
+
+
+DataFilesDict = Dict[str, DataFileMetadata]
+"""Dictionary of :class:`dttr.data.DataFileMetadata`"""
+
+
+# Models:
 
 
 class DataFileModel(BaseModel):
+    """Base model for data files.
+
+    All instances of data classes are created from a file
+    that are validated against this model
+
+    :param name: Name of the data instance (this is only for repsentational purposes)
+        and it's not the same as the data ID
+    :param extends: Optional ID of data another data file from the same category (class)
+        as this instance
+    :param custom: A dictionary that contains actual data and may be used in different
+        ways by the data class
+    """
+
     name: str
     extends: Optional[str]
     custom: Optional[Dict[str, CustomDictTypes]]
 
 
+# Classes:
+
+
 class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
+    """Abstract Data base class.
+
+    All data classes are subclasses of this.
+
+    :param id: Unique ID of the data instance. The ID is only unique to a specific
+        subclass (can be reused in different subclasses)
+    :param name: Name for repsentational purposes
+    :param data_file_path: Path of the data file
+    """
+
     id: str
     name: str
     data_file_path: Path
@@ -61,10 +124,17 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
 
     @abstractmethod
     def load_data_file() -> None:
+        """This method loads (parses and validate) the data file for this instance (see
+        :attr:`dttr.data.AbstractData.data_file_path`)"""
         pass
 
     @property
     def file_data(self) -> Optional[DataFileModelType]:
+        """Get the parsed file data model instance. If it is not loaded yet, this
+            function will call :meth:`dttr.data.AbstractData.load_data_file` first
+
+        :returns: Loaded data from instance data file
+        """
         if not self._file_data:
             self.load_data_file()
 
@@ -72,33 +142,57 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
 
     @file_data.setter
     def file_data(self, value: DataFileModelType) -> None:
+        """Setter for ``file_data``. This setter is meant to be used by
+        :meth:`dttr.data.AbstractData.load_data_file`"""
         self._file_data = value
 
     @property
-    def data(self):
+    def data(self) -> DataType:
+        """This property holds the "computed data" for this instance.
+
+        This is the data that should be fed to the template processing library.
+
+        The computed data holds different values depending on the sublcass (for
+        instance, the file paths for a fileset or the hexadecimal codes for a
+        colorscheme), and if the data class instance extends another instance, it will
+        probably have inherited values from that instances too.
+
+        If the data is not computed yet, this will call
+        :meth:`dttr.data.AbstractData.compute_data` first
+        """
+
         if not self._computed_data:
             self.compute_data()
 
-        return self._computed_data
+        return cast(DataType, self._computed_data)
 
     @data.setter
     def data(self, value: DataType) -> None:
+        """Setter for ``data``. This setter is meant to be used by
+        :meth:`dttr.data.AbstractData.compute_data`"""
+
         self._computed_data = value
 
     @abstractmethod
-    def compute_data(self):
-        """Populate `data` property with the values this class expects"""
+    def compute_data(self) -> None:
+        """This method should be implemented by subclasses to populate
+        :attr:`dttr.data.AbstractData.data` property with the values that subclass
+        expects"""
         pass
 
     @abstractmethod
-    def print_data():
-        """Pretty prints the data from this instance"""
+    def print_data() -> None:
+        """Pretty prints the data property from this instance"""
         pass
 
     @cached_property
     @abstractmethod
     def parents(self) -> List[DataClassType]:
-        """Get parents recursively"""
+        """This method uses :meth:`dttr.data.AbstractData._get_parents` to get parents
+        recursively.
+
+        :returns: List of parents with this data instance in the first
+        """
         pass
 
     @classmethod
@@ -107,11 +201,12 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
         get_all_instances: Callable[[], Dict[str, DataClassType]],
         configs: List[DataClassType],
     ) -> List[DataClassType]:
-        """Filters list returned by `get_all_configs()` that are parents.
+        """Class method that tecursively populates and returns a list with the class
+        instance and all parents (extended) instances
 
-        This is meant to be called in `parents` property getter with a
-        `get_all_configs` function that returns the config files that can be
-        used with this particular class
+        This is meant to be called in :attr:`dttr.data.AbstractData.parents` with a
+        ``get_all_instances`` function that returns the config files that can be
+        used with this particular subclass
         """
         last_cfg = configs[-1].file_data
 
@@ -143,6 +238,10 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
 
 
 class BasicData(AbstractData[DataFileModel, BaseModel]):
+    """Abstract data class for subclasses that use :class:`dttr.data.DataFileModel` as it
+    file data model and :class:`pydantic.BaseModel` as its (custom) data type
+    """
+
     def load_data_file(self):
         self.file_data = load_toml_cfg_model(self.data_file_path, DataFileModel)
 
@@ -164,17 +263,20 @@ class BasicData(AbstractData[DataFileModel, BaseModel]):
         print_key_values(self.data.dict())
 
 
-class DataFileMetadata(TypedDict):
-    id: str
-    name: str
-    path: Path
-
-
-DataFilesDict = Dict[str, DataFileMetadata]
+# Functions:
 
 
 @cache
 def get_data_files(dir: Path) -> DataFilesDict:
+    """ "Generic" function to get all the data files in a directory.
+
+    Every submodule that defines a data class should define a function that calls this
+    function with a specific ``dir`` parameter.
+
+    This function sets the ID for each instance using the filename minus the extension
+
+    :param dir: Path to the directory with the data files
+    """
 
     files_dict: DataFilesDict = {}
 
@@ -196,6 +298,16 @@ def get_data_files(dir: Path) -> DataFilesDict:
 def get_data_by_id(
     id: str, files: DataFilesDict, cls: Type[DataClassType]
 ) -> Optional[DataClassType]:
+    """Generic function to get a specific data class instance by id (unique).
+
+    Every submodule that defines a data class should define a function that calls this
+    function with specific ``files`` and ``cls`` parameters.
+
+    :param id: The id string that identifies the data class instance
+    :param files: :data:`dttr.data.DataFilesDict` returned by
+        :func:`dttr.data.get_data_files`
+    :param cls: Concrete class to construct the data instance
+    """
     try:
         file = files[id]
         id = file["id"]
@@ -209,6 +321,17 @@ def get_data_by_id(
 def get_all_data_instances(
     files: DataFilesDict, getter: GenericDataGetter[DataClassType]
 ) -> Dict[str, DataClassType]:
+    """Generic function that returns all instances of a data class.
+
+    Every submodule that defines a data class should define a function that calls this
+    function with specific ``files`` and ``getter`` parameters.
+
+    :param files: :data:`dttr.data.DataFilesDict` returned by
+        :func:`dttr.data.get_data_files`
+    :param getter: Generic function that calls :func:`dttr.data.get_data_by_id` to
+        return a data class instance
+    """
+
     cfgs = {}
 
     for name in files.keys():
