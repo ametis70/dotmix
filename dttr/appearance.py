@@ -5,9 +5,9 @@ from dttr.config import get_data_dir
 from dttr.data import (
     BasicData,
     DataFilesDict,
-    get_all_configs,
-    get_config_by_id,
-    get_config_files,
+    get_all_data_instances,
+    get_data_by_id,
+    get_data_files,
 )
 
 
@@ -22,13 +22,13 @@ def get_appearances_dir():
 
 
 def get_appearance_files() -> DataFilesDict:
-    return get_config_files(get_appearances_dir())
+    return get_data_files(get_appearances_dir())
 
 
 def get_appearances() -> Dict[str, Appearance]:
-    return get_all_configs(get_appearance_files(), get_appearance_by_id)
+    return get_all_data_instances(get_appearance_files(), get_appearance_by_id)
 
 
 @cache
 def get_appearance_by_id(id: str) -> Optional[Appearance]:
-    return get_config_by_id(id, get_appearance_files(), Appearance)
+    return get_data_by_id(id, get_appearance_files(), Appearance)

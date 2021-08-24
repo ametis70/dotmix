@@ -47,10 +47,10 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
     _file_data: Optional[DataFileModelType]
     _parents: Optional[List[BaseModel]]
 
-    def __init__(self, id: str, name: str, cfg_file: Path):
+    def __init__(self, id: str, name: str, data_file_path: Path):
         self.id = id
         self.name = name
-        self.data_file_path = cfg_file
+        self.data_file_path = data_file_path
 
         self._file_data = None
         self._computed_data = None
@@ -104,7 +104,7 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
     @classmethod
     def _get_parents(
         cls: Type[DataClassType],
-        get_all_configs: Callable[[], Dict[str, DataClassType]],
+        get_all_instances: Callable[[], Dict[str, DataClassType]],
         configs: List[DataClassType],
     ) -> List[DataClassType]:
         """Filters list returned by `get_all_configs()` that are parents.
@@ -119,7 +119,7 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
             return configs
 
         parent = next(
-            (c for c in get_all_configs().values() if c.id == last_cfg.extends),
+            (c for c in get_all_instances().values() if c.id == last_cfg.extends),
             None,
         )
 
@@ -139,7 +139,7 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
             )
 
         configs.append(parent)
-        return cls._get_parents(get_all_configs, configs)
+        return cls._get_parents(get_all_instances, configs)
 
 
 class BasicData(AbstractData[DataFileModel, BaseModel]):
@@ -174,7 +174,8 @@ DataFilesDict = Dict[str, DataFileMetadata]
 
 
 @cache
-def get_config_files(dir: Path):
+def get_data_files(dir: Path) -> DataFilesDict:
+
     files_dict: DataFilesDict = {}
 
     files = [f for f in os.listdir(dir) if re.match(r".*\.toml", f)]
@@ -192,7 +193,7 @@ def get_config_files(dir: Path):
     return files_dict
 
 
-def get_config_by_id(
+def get_data_by_id(
     id: str, files: DataFilesDict, cls: Type[DataClassType]
 ) -> Optional[DataClassType]:
     try:
@@ -205,7 +206,7 @@ def get_config_by_id(
         print_err(f'{cls.__name__} "{id}" not found')
 
 
-def get_all_configs(
+def get_all_data_instances(
     files: DataFilesDict, getter: GenericDataGetter[DataClassType]
 ) -> Dict[str, DataClassType]:
     cfgs = {}

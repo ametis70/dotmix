@@ -10,9 +10,9 @@ from dttr.data import (
     AbstractData,
     DataFileModel,
     DataFilesDict,
-    get_all_configs,
-    get_config_by_id,
-    get_config_files,
+    get_all_data_instances,
+    get_data_by_id,
+    get_data_files,
 )
 from dttr.utils import deep_merge, load_toml_cfg_model, print_key_values
 
@@ -103,16 +103,16 @@ def get_colorschemes_dir() -> Path:
 
 
 def get_colorscheme_files() -> DataFilesDict:
-    return get_config_files(get_colorschemes_dir())
+    return get_data_files(get_colorschemes_dir())
 
 
 def get_colorschemes() -> Dict[str, Colorscheme]:
-    return get_all_configs(get_colorscheme_files(), get_colorscheme_by_id)
+    return get_all_data_instances(get_colorscheme_files(), get_colorscheme_by_id)
 
 
 @cache
 def get_colorscheme_by_id(id: str) -> Optional[Colorscheme]:
-    return get_config_by_id(id, get_colorscheme_files(), Colorscheme)
+    return get_data_by_id(id, get_colorscheme_files(), Colorscheme)
 
 
 def compute_colors(colors: ParsedColorschemes):

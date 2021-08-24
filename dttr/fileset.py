@@ -10,8 +10,8 @@ from dttr.data import (
     AbstractData,
     DataFileModel,
     DataFilesDict,
-    get_all_configs,
-    get_config_by_id,
+    get_all_data_instances,
+    get_data_by_id,
 )
 
 from .config import get_data_dir
@@ -89,11 +89,11 @@ def get_fileset_settings():
 
 
 def get_filesets() -> Dict[str, Fileset]:
-    return get_all_configs(get_fileset_settings(), get_fileset_by_id)
+    return get_all_data_instances(get_fileset_settings(), get_fileset_by_id)
 
 
 def get_fileset_by_id(id: str) -> Optional[Fileset]:
-    return get_config_by_id(id, get_fileset_settings(), Fileset)
+    return get_data_by_id(id, get_fileset_settings(), Fileset)
 
 
 def get_paths_from_fileset(f: Fileset) -> Dict[str, FileModel]:
