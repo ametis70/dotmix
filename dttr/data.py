@@ -36,27 +36,28 @@ from dttr.utils import (
 # Types:
 
 DataClassType = TypeVar("DataClassType", bound="AbstractData")
-"""Type for classes that extend ``dttr.data.AbstractData``"""
+"""Type for classes that extend :class:`dttr.data.AbstractData`"""
 
 DataFileModelType = TypeVar("DataFileModelType", bound="DataFileModel")
-"""Type for models that extend ``dttr.data.DataFileModel``"""
+"""Type for models that are submodels of :class:`dttr.data.DataFileModel``"""
 
 DataType = TypeVar("DataType", bound=Union[TypedDict, BaseModel, Dict])
-"""This type represent which values the computed data for ```dttr.data.AbstractData``
-can take"""
+"""This type represent which values the computed data for
+:class:`dttr.data.AbstractData` can take"""
 
 
 GenericDataGetter = Callable[[str], Optional[DataClassType]]
 """Callable typing for functions that return instances of subclasses
-of ``dttr.data.AbstractData``"""
+of :class:`dttr.data.AbstractData`"""
 
 
 CustomDictTypes = Union[str, bool, int, List, Dict]
-"""Types for the custom dict of ```dttr.data.DataFileModel```"""
+"""Types for the custom dict of :class:`dttr.data.DataFileModel`"""
 
 
 class DataFileMetadata(TypedDict):
-    """Typing for the dictionary that returns :func:`dttr.data.get_config_files`"""
+    """Typing for the dictionary that is returned by
+    :func:`dttr.data.get_config_files`"""
 
     id: str
     name: str
@@ -191,7 +192,8 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
         """This method uses :meth:`dttr.data.AbstractData._get_parents` to get parents
         recursively.
 
-        :returns: List of parents with this data instance in the first
+        :returns: List with this instance on the first index followed by its parents
+            (if there are any)
         """
         pass
 
