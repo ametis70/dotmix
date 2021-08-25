@@ -1,3 +1,5 @@
+"""Data module for filesets"""
+
 import os
 from functools import cached_property
 from pathlib import Path
@@ -19,6 +21,14 @@ from .utils import deep_merge, load_toml_cfg, load_toml_cfg_model
 
 
 class FileModel(BaseModel):
+    """Model for individual files
+
+    :param id: Unique id that identifies the file. Can be used to detect collisions
+        between a fileset instance and its parents
+    :param path: Absolute file path
+    :param fileset: Fileset instance associated with this file
+    """
+
     id: str
     path: Path
     fileset: "Fileset"
@@ -28,9 +38,12 @@ class FileModel(BaseModel):
 
 
 FileModelDict = Dict[str, FileModel]
+"""Dictionary of fileset files"""
 
 
 class Fileset(AbstractData[DataFileModel, FileModelDict]):
+    """Data class for filesets"""
+
     def load_data_file(self):
         self.file_data = load_toml_cfg_model(self.data_file_path, DataFileModel)
 
@@ -67,12 +80,22 @@ FileModel.update_forward_refs()
 
 
 def get_filesets_dir() -> Path:
+    """Get filesets directory.
+
+    :returns: Filesets directory
+    """
+
     return get_data_dir() / "templates"
 
 
-def get_fileset_settings():
+def get_fileset_files():
+    """Get filesets data files.
+
+    :returns: Fileset data files dictionary
+    """
+
     files_dir = get_filesets_dir()
-    files_settings: DataFilesDict = {}
+    fileset_data_files: DataFilesDict = {}
 
     for dir in files_dir.iterdir():
         path = dir / "settings.toml"
@@ -83,21 +106,37 @@ def get_fileset_settings():
             id = dir.name
 
             if cfg and name:
-                files_settings[id] = {"id": id, "path": path, "name": name}
+                fileset_data_files[id] = {"id": id, "path": path, "name": name}
 
-    return files_settings
+    return fileset_data_files
 
 
 def get_filesets() -> Dict[str, Fileset]:
-    return get_all_data_instances(get_fileset_settings(), get_fileset_by_id)
+    """Get all fileset instances.
+
+    :returns: Dict of fileset instances
+    """
+
+    return get_all_data_instances(get_fileset_files(), get_fileset_by_id)
 
 
 def get_fileset_by_id(id: str) -> Optional[Fileset]:
-    return get_data_by_id(id, get_fileset_settings(), Fileset)
+    """Get a specific fileset instance by id.
+
+    :param id: Id of the fileset to get
+    :returns: Fileset instance
+    """
+
+    return get_data_by_id(id, get_fileset_files(), Fileset)
 
 
-def get_paths_from_fileset(f: Fileset) -> Dict[str, FileModel]:
-    files: Dict[str, FileModel] = {}
+def get_paths_from_fileset(f: Fileset) -> FileModelDict:
+    """Recusrively get all template files from fileset
+
+    :param f: Fileset instance
+    :returns: Dictionary of file models
+    """
+    files: FileModelDict = {}
     dir = f.data_file_path.parent
     for (dirpath, _, filenames) in os.walk(dir):
         if not filenames or any(map(lambda f: f == "settings.toml", filenames)):
