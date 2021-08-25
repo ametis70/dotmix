@@ -6,11 +6,11 @@ dttr is a command line tool to manage your dotfiles using a template system to a
 By writing your dotfiles using a template language (i.e. keeping the same exact files except when you want to make some value variable) and the data (that will inserted in the template) in configuration files, dttr can produce different sets of usable dotfiles with minimal effort.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    usage
-   api
+   autoapi/index
 
 Indices and tables
 ==================
