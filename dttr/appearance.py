@@ -1,4 +1,4 @@
-"""Data module for colorschemes"""
+"""Data module for appearances"""
 
 from functools import cache, cached_property
 from typing import Dict, Optional

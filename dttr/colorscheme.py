@@ -1,3 +1,4 @@
+"""Data module for colorschemes"""
 import os
 from functools import cache, cached_property
 from pathlib import Path
@@ -30,18 +31,26 @@ from dttr.utils import deep_merge, load_toml_cfg_model, print_key_values
 from dttr.vendor.colp import HEX
 
 
-class ColorschemeConfig(DataFileModel):
+class ColorschemeDataFileModel(DataFileModel):
+    """Data file model for colorschemes"""
+
     colors: ParsedColorschemes
 
 
 class ColorschemeData(TypedDict):
+    """Computed data type for colorscheme"""
+
     colors: DttrColorscheme
     custom: Dict[str, Any]
 
 
-class Colorscheme(AbstractData[ColorschemeConfig, ColorschemeData]):
+class Colorscheme(AbstractData[ColorschemeDataFileModel, ColorschemeData]):
+    """Data class for appearances"""
+
     def load_data_file(self):
-        self.file_data = load_toml_cfg_model(self.data_file_path, ColorschemeConfig)
+        self.file_data = load_toml_cfg_model(
+            self.data_file_path, ColorschemeDataFileModel
+        )
 
     def compute_data(self):
         if not self.file_data.extends:
@@ -96,23 +105,53 @@ class Colorscheme(AbstractData[ColorschemeConfig, ColorschemeData]):
 
 
 def get_colorschemes_dir() -> Path:
+    """Get colorscheme directory.
+
+    :returns: Colorscheme data files directory
+    """
     return get_data_dir() / "colors"
 
 
 def get_colorscheme_files() -> DataFilesDict:
+    """Get colorscheme files.
+
+    :returns: Colorscheme data files dictionary
+    """
+
     return get_data_files(get_colorschemes_dir())
 
 
 def get_colorschemes() -> Dict[str, Colorscheme]:
+    """Get all colorscheme instances.
+
+    :returns: Dict of colorscheme instances
+    """
+
     return get_all_data_instances(get_colorscheme_files(), get_colorscheme_by_id)
 
 
 @cache
 def get_colorscheme_by_id(id: str) -> Optional[Colorscheme]:
+    """Get a specific colorscheme instance by id.
+
+    :param id: Id of the colorscheme to get
+    :returns: Colorscheme instance
+    """
+
     return get_data_by_id(id, get_colorscheme_files(), Colorscheme)
 
 
-def compute_colors(colors: ParsedColorschemes):
+def compute_colors(colors: ParsedColorschemes) -> DttrColorscheme:
+    """Function called by :meth:`dttr.colorscheme.Colorscheme.compute_data` to generate
+    a colorscheme that can be used by the template engine
+
+    Read the enviorment variable ``DTTR_COLORMODE`` to determine what function to call
+    based on the colormode. If the variable is not set, it will fall back to reading
+    the configuration file.
+
+    :param colors: Parsed colorschemes model instance
+    :returns: Ready to use colorscheme
+    """
     colormode = Optional[Literal["terminal", "base16"]]
     env = os.getenv("DTTR_COLORMODE")
     if env == "terminal" or env == "base16":
@@ -133,6 +172,11 @@ def compute_colors(colors: ParsedColorschemes):
 def compute_colorscheme_from_base16(
     colors: Base16Colorscheme,
 ) -> DttrColorscheme:
+    """Generate a dttr colorscheme from a base16 colorscheme model instance.
+
+    :param colors: Instance of parsed base16 colorscheme model
+    :retunrs: Ready to use colorscheme
+    """
     c = colors
 
     color_dict = {
@@ -171,6 +215,12 @@ def compute_colorscheme_from_base16(
 def compute_colorscheme_from_terminal(
     colors: TerminalColorscheme,
 ) -> DttrColorscheme:
+    """Generate a dttr colorscheme from a terminal colorscheme model instance.
+
+    :param colors: Instance of parsed terminal colorscheme model
+    :retunrs: Ready to use colorscheme
+    """
+
     c = colors
 
     color_dict = {
