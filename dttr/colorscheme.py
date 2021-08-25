@@ -81,7 +81,7 @@ class Colorscheme(AbstractData[ColorschemeConfig, ColorschemeData]):
             click.echo(
                 "  "
                 + click.style(
-                    f"  {color : <10} - {str(c) : <7} - {rgb : <20}",
+                    f"  {color : <11} - {str(c) : <7} - {rgb : <20}",
                     fg=("white" if c.brightness() < 0.5 else "black"),
                     bg=(r, g, b),
                 )
