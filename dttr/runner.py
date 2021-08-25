@@ -1,3 +1,5 @@
+""" Module for running dttr. This module contains functions to work with the template
+    engine, computing checksums and running hooks"""
 import hashlib
 import os
 import shutil
@@ -26,23 +28,49 @@ from dttr.utils import (
 )
 
 
-def get_out_dir():
+def get_out_dir() -> Path:
+    """Get the output files directory.
+
+    :returns: Output directory
+    """
     return get_data_dir() / "out"
 
 
-def get_checksums_file():
+def get_checksums_file() -> Path:
+    """Get the checksums files.
+
+    :returns: Checksums file
+    """
+
     return get_data_dir() / ".checksums"
 
 
-def get_out_backup_dir():
+def get_out_backup_dir() -> Path:
+    """Get the output backup directory.
+
+    :returns: Output backup directory
+    """
+
     return get_data_dir() / ".out.backup"
 
 
-def get_hooks_dir():
+def get_hooks_dir() -> Path:
+    """Get the hooks directory.
+
+    :returns: Hook directory
+    """
+
     return get_data_dir() / "hooks"
 
 
 def run_hook(hook: str) -> int:
+    """Run a hook in a subprocess and return its return code
+
+    :param hook: Filename of the hook
+
+    :returns: Hook subprocess return code
+    """
+
     return_code: int = 1
     hook_file = get_hooks_dir() / hook
     try:
@@ -65,12 +93,26 @@ def run_hook(hook: str) -> int:
 
 
 def hash_file(file: Path) -> str:
+    """Create a sha256 hash of a file
+
+    :param file: File to hash
+
+    :returns: Generated hash
+    """
     with file.open("rb") as f:
         hash = hashlib.sha256(f.read()).hexdigest()
         return hash
 
 
 def write_checksums() -> None:
+    """Write hashes of output files to checksums file.
+
+    .. warning::
+        This function should be called only when running :func:`apply` because it is
+        used to check for changes of the current output files. If called afterwards,
+        there's risk of losing changes.
+    """
+
     data_dir = get_data_dir()
     checksums = []
     for root, _, files in os.walk(get_out_dir()):
@@ -83,6 +125,10 @@ def write_checksums() -> None:
 
 
 def verify_checksums() -> List[str]:
+    """Verify checksums and return a list of modified files.
+
+    :returns: List of modified files
+    """
     data_dir = get_data_dir()
     modified_files = []
 
@@ -98,7 +144,12 @@ def verify_checksums() -> List[str]:
     return modified_files
 
 
-def print_modified_files(modified_files: List[str]):
+def print_modified_files(modified_files: List[str]) -> None:
+    """Pretty prints modified files.
+
+    :param modified_files: This should be a list of files like the one returned by
+    :func:`verify_checksums`
+    """
     if modified_files:
         click.secho("The following files where modified:\n", fg="yellow")
         for file in modified_files:
@@ -112,6 +163,17 @@ def get_settings(
     getter: GenericDataGetter[DataClassType],
     use_defaults: bool,
 ) -> Optional[DataClassType]:
+    """Function to get a data instance from an ID (if specified) or its default value
+        from the defaults configuration (if defined).
+
+    The defaults configuration is defined in :mod:`dttr.config`.
+
+    :param field: Data file/class type
+    :param id: ID of the data to get
+    :param getter: Function to get the data class instance by ID
+    :param use_defaults: Flag to determine if defaults should be used in case no ID is
+        specified
+    """
     if not id:
         if not use_defaults:
             print_wrn(f"Skipping {field} (No id provided and not using default)")
@@ -137,17 +199,31 @@ def get_settings(
         return settings
 
 
-def render_file(file: FileModel, reltaive_path: str, out_dir: str, vars: Dict):
+def render_file(file: FileModel, relative_path: str, out_dir: str, vars: Dict) -> None:
+    """Read template file and write output file.
+
+    :param file: Template file from fileset
+    :param relative_path: Relative path to root of fileset
+    :param out_dir: Directory for output files
+    :param vars: Input variables for the template engine
+    """
     with open(file.path, "r") as f:
         rendered = cast(str, chevron.render(f, vars))
-        out_file = Path(out_dir) / reltaive_path
+        out_file = Path(out_dir) / relative_path
         os.makedirs(out_file.parent, exist_ok=True)
         print_verbose(f"Rendering file: {str(out_file)}")
         with out_file.open("w", encoding="utf-8") as out:
             out.write(rendered)
 
 
-def render_fileset(fileset: Fileset, out_dir: str, vars: Dict):
+def render_fileset(fileset: Fileset, out_dir: str, vars: Dict) -> None:
+    """Render and write a complete fileset.
+
+    :param fileset: Fileset to be rendered
+    :param out_dir: Output files directory
+    :param vars: Input variables for the tempalte engine
+    """
+
     for relative_dir, file in fileset.data.items():
         render_file(file, relative_dir, out_dir, vars)
 
@@ -156,7 +232,15 @@ def merge_data(
     colorscheme: Optional[Colorscheme],
     typography: Optional[Typography],
     appearance: Optional[Appearance],
-):
+) -> Dict:
+    """Merge variables from data instances and return a new dictionary
+
+    :param colorscheme: Colorscheme model instance
+    :param typography: Typography model instance
+    :param appearance: Appearance model instance
+
+    :returns: Dictionary with variables to be fed to the template engine
+    """
     colorscheme_values = (
         {**colorscheme.data["colors"].dict(), **colorscheme.data["custom"]}
         if colorscheme
@@ -186,7 +270,24 @@ def apply(
     use_defaults: bool = True,
     force: bool = False,
     interactive: bool = False,
-):
+) -> None:
+    """Main function of dttr.
+
+    This will get the data instances , check for modified files, render files, write
+    checksums and run hooks.
+
+
+    :param colorscheme_id: ID for colorscheme
+    :param fileset_id: ID for fileset
+    :param appearance: ID for appearance
+    :param typography: ID for typogrpahy
+    :param pre_hook: Filename for pre_hook
+    :param post_hook: Filename for post hook
+    :param use_defaults: Flag to determine if defaults should be used
+    :param force: Flag to force running even if files where modified
+    :param interactive: If it's true, this function will ask for confirmation before
+        running. This parameter is true when running from the CLI
+    """
 
     fileset = get_settings("fileset", fileset_id, get_fileset_by_id, use_defaults)
 
