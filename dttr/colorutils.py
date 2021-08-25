@@ -1,3 +1,6 @@
+"""This module contains the utilitary models and functions needed by
+:mod:`dttr.colorscheme` """
+
 from typing import Callable, List, Optional, cast
 
 from pydantic import BaseModel
@@ -7,6 +10,30 @@ from dttr.vendor.colp import HEX, RGB
 
 
 class Base16Colorscheme(BaseModel):
+    """Model for a Base16 colorscheme definition.
+
+    Check the `Base16 website <http://www.chriskempson.com/projects/base16/>`_ to learn
+    more.
+
+    :param base00: Default background
+    :param base01: Lighter Background (Used for status bars, line number and folding
+        marks)
+    :param base02: Selection Background
+    :param base03: Comments, Invisibles, Line Highlighting
+    :param base04: Dark Foreground (Used for status bars)
+    :param base05: Default Foreground, Caret, Delimiters, Operators
+    :param base06: Light Foreground (Not often used)
+    :param base07: Light Background (Not often used)
+    :param base08: Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted
+    :param base09: Integers, Boolean, Constants, XML Attributes, Markup Link Url
+    :param base0A: Classes, Markup Bold, Search Text Background
+    :param base0B: Strings, Inherited Class, Markup Code, Diff Inserted
+    :param base0C: Support, Regular Expressions, Escape Characters, Markup Quotes
+    :param base0D: Functions, Methods, Attribute IDs, Headings
+    :param base0E: Keywords, Storage, Selector, Markup Italic, Diff Changed
+    :param base0F: Deprecated, Opening/Closing Embedded Language Tags, e.g. ``<?php ?>``
+    """
+
     base00: Optional[str]
     base01: Optional[str]
     base02: Optional[str]
@@ -26,6 +53,38 @@ class Base16Colorscheme(BaseModel):
 
 
 class TerminalColorscheme(BaseModel):
+    """Model for a Terminal colorscheme definition.
+
+    This corresponds to the 16 colors that terminal emulators always used for
+    historical reasons (dating back to when EGA/VGA were a thing).
+
+    Color numbers are based off the order of the
+    `ANSI escape codes <https://en.wikipedia.org/wiki/ANSI_escape_code>`_.
+
+    Modern terminal emulators also allow to define a different background and
+    foreground colors and these can be specified using the ``bg`` and ``fg``
+    fields respectively
+
+    :param bg: Background (black)
+    :param fg: Foreground (white)
+    :param color0: Black
+    :param color1: Red
+    :param color2: Green
+    :param color3: Yellow
+    :param color4: Blue
+    :param color5: Magenta
+    :param color6: Cyan
+    :param color7: White
+    :param color8: Bright black (gray)
+    :param color9: Bright Red
+    :param color10: Bright Green
+    :param color11: Bright Yellow
+    :param color12: Bright Blue
+    :param color13: Bright Magenta
+    :param color14: Bright Cyan
+    :param color15: Bright White
+    """
+
     bg: Optional[str]
     fg: Optional[str]
     color0: Optional[str]
@@ -47,11 +106,21 @@ class TerminalColorscheme(BaseModel):
 
 
 class ParsedColorschemes(BaseModel):
+    """This model holds a definition of every the possible colorscheme model"""
+
     terminal: TerminalColorscheme
     base16: Base16Colorscheme
 
 
 class DttrColorscheme(BaseModel):
+    """Model for the dttr colorscheme.
+
+    Depending on the input colorscheme (e.g terminal or base16), some of these colors
+    may be generated from others as needed.
+
+    These are the colors that are made available to the templating engine.
+    """
+
     bg: str
     light_bg: str
     selection: str
@@ -81,6 +150,12 @@ class DttrColorscheme(BaseModel):
 
 
 def check_hex(func: Callable[[List[HEX]], str]):
+    """Decorator to check if the colors passed to a function are valid hexadecimal
+    codes.
+
+    :param func: The function to be called if the value is valid
+    """
+
     def inner(*args: Optional[str]):
         colors: List[HEX] = []
         for arg in args:
@@ -104,35 +179,67 @@ def check_hex(func: Callable[[List[HEX]], str]):
 
 @check_hex
 def normalize(colors: List[HEX]) -> str:
+    """Convert ``colp.HEX`` to ``str``.
+
+    This can be used to make al hex representations look the same.
+
+    :param colors: List of colors (only the first is used)
+    :returns: Color heaxedecimal normalized in the form of "#000FFF"
+    """
     return str(colors[0])
 
 
 @check_hex
 def make_alt_color(colors: List[HEX]) -> str:
+    """Make a darker color of a lighter one or a lighter one of a darker one
+
+    :param colors: List of colors (only the first is used)
+    :returns: Color heaxedecimal normalized in the form of "#000FFF"
+    """
     c = colors[0]
     return str(c.darker(1.25) if c.brightness() > 0.5 else c.brighter(1.25))
 
 
 @check_hex
 def make_alt_color_inverse(colors: List[HEX]) -> str:
+    """Make a darker color of a darker one or a lighter one of a lighter one
+
+    :param colors: List of colors (only the first is used)
+    :returns: Color heaxedecimal normalized in the form of "#000FFF"
+    """
     c = colors[0]
     return str(c.darker(1.1) if c.brightness() < 0.5 else c.brighter(1.1))
 
 
 @check_hex
 def make_orange_from_yellow(colors: List[HEX]) -> str:
+    """Make a "orange" color from a "yellow" one
+
+    :param colors: List of colors (only the first is used)
+    :returns: Color heaxedecimal normalized in the form of "#000FFF"
+    """
     c = colors[0]
     return str(c.rotate(-15))
 
 
 @check_hex
 def make_brown_from_orange(colors: List[HEX]) -> str:
+    """Make a "brown" color from a "orange" one
+
+    :param colors: List of colors (only the first is used)
+    :returns: Color heaxedecimal normalized in the form of "#000FFF"
+    """
     c = colors[0]
     return str(c.rotate(-10).darker(1.1))
 
 
 @check_hex
 def make_average_color(colors: List[HEX]) -> str:
+    """Get the average color of two colors
+
+    :param colors: List colors (only the first two are used)
+    :returns: Color heaxedecimal normalized in the form of "#000FFF"
+    """
     try:
         a = colors[0]
         b = colors[1]
