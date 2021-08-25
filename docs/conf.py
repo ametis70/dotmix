@@ -14,8 +14,6 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../"))
-# sys.path.append(os.path.abspath("../"))
-
 
 # -- Project information -----------------------------------------------------
 
@@ -43,7 +41,10 @@ autoapi_type = "python"
 autoapi_template_dir = "./_templates/autoapi"
 
 
-intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "click": ("https://click.palletsprojects.com/en/8.0.x/", None),
+}
 
 
 # Add any paths that contain templates here, relative to this directory.

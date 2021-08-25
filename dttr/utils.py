@@ -1,3 +1,4 @@
+"""Module for general utilitary functions"""
 import os
 import sys
 from pathlib import Path
@@ -10,13 +11,23 @@ from pydantic.main import BaseModel
 from toml import TomlDecodeError
 
 VERBOSE = "DTTR_VERBOSE"
+"""Environment variable name to determine if more information should be printed"""
 
 
 def get_verbose() -> bool:
+    """Get verbosity.
+
+    :return: true if dttr is running in verbose mode
+    """
     return bool(os.getenv(VERBOSE))
 
 
 def set_verbose(value: bool) -> None:
+    """Enable or disable verbosity.
+
+    :param value: True to enable verbosity, false to disable
+    """
+
     if value:
         os.environ[VERBOSE] = "1"
     else:
@@ -25,13 +36,17 @@ def set_verbose(value: bool) -> None:
 
 
 def get_path_from_env(env_vars: List[Union[str, Tuple[str, bool]]]) -> str:
-    """Return the first variable that is set in env_vars
+    """Get path from enviroment variables
 
-    env_vars is a list that contains strings or tuples with a string and
+    If no environment variable is set, this function whil call :func:`sys.exit`
+
+    :param env_vars: List that contains strings or tuples with a string and
     a boolean. In both cases, the string is the name of the env var to
     get the path from, while on the tuple the second parameter is used to
-    determine if '/dttr/' should be appended to the path of the environment
+    determine if ``/dttr/`` should be appended to the path of the environment
     variable.
+
+    :returns: The first environment variable that is set.
     """
 
     def print_env_vars() -> str:
@@ -67,6 +82,12 @@ def get_path_from_env(env_vars: List[Union[str, Tuple[str, bool]]]) -> str:
 
 
 def load_toml_cfg(path: Path) -> Optional[Dict]:
+    """Load a TOML file into a dict
+
+    :param path: Path of the TOML file
+
+    :returns: A dictionary with the parsed values if the file is found
+    """
     fd = None
     cfg = None
 
@@ -94,10 +115,19 @@ def load_toml_cfg(path: Path) -> Optional[Dict]:
     return cfg
 
 
-T = TypeVar("T", bound=BaseModel)
+BaseModelType = TypeVar("BaseModelType", bound=BaseModel)
+"""Models that are submodels of pyantic's ``BaseModel``"""
 
 
-def load_toml_cfg_model(path: Path, model: Type[T]) -> T:
+def load_toml_cfg_model(path: Path, model: Type[BaseModelType]) -> BaseModelType:
+    """Generic function to load a TOML file into a dict with :func:`load_toml_cfg` and
+        create a model instance.
+
+    :param path: Path of the TOML file to load
+    :param model: Model class
+
+    :returns: Instance of the model
+    """
     model_instance = None
     cfg = load_toml_cfg(path)
     try:
@@ -110,7 +140,13 @@ def load_toml_cfg_model(path: Path, model: Type[T]) -> T:
 
 
 def deep_merge(dict1: dict, dict2: dict) -> dict:
-    """Merges two dicts. If keys are conflicting, dict2 is preferred."""
+    """Merges two dictionaries. If keys are conflicting, ``dict2`` is preferred.
+
+    :param dict1: Original dictionary
+    :param dict2: Dictionary to be merged (preferred)
+
+    :returns: New dictionary
+    """
 
     def _val(v1, v2):
         if isinstance(v1, dict) and isinstance(v2, dict):
@@ -121,10 +157,20 @@ def deep_merge(dict1: dict, dict2: dict) -> dict:
 
 
 def print_pair(lhs: str, rhs: str):
+    """Pretty prints an arbitrary pair of values
+
+    :param lhs: Left hand side
+    :param rhs: Right hand side
+    """
     click.echo(f"  {click.style(lhs, fg='yellow')} -> {click.style(rhs, fg='green')}")
 
 
 def print_key_values(dict: Optional[Dict]) -> None:
+    """Pretty prints keys and values from dict using :func:`print_pair`
+
+    :param dict: Dictionary to print
+    """
+
     if not dict:
         return
 
@@ -133,15 +179,31 @@ def print_key_values(dict: Optional[Dict]) -> None:
 
 
 def print_err(string: str, exit: bool = False):
+    """Print a error and optionaly exit.
+
+    :param string: String to print
+    :param exit: If this value is true, the prorgam will exit after printing this
+        message
+    """
     click.secho(f"Error: {string}", fg="red", err=True)
     if exit:
         sys.exit(1)
 
 
 def print_wrn(string: str):
+    """Print a warning.
+
+    :param string: String to print
+    """
+
     click.secho(f"Warning: {string}", fg="yellow", err=True)
 
 
 def print_verbose(string: str, **kwargs):
+    """Print only if running in verbose mode
+
+    :param string: String to print
+    :param **kwargs: Keyword arguments to pass to :func:`click.secho`
+    """
     if get_verbose():
         click.secho(string, **kwargs)
