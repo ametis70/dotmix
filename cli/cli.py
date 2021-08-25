@@ -8,6 +8,7 @@ from dttr.runner import apply
 from dttr.typography import get_typographies, get_typography_by_id
 from dttr.utils import set_verbose
 
+from .completion import AppearanceType, ColorschemeType, FilesetType, TypographyType
 from .utils import print_setting_names
 
 
@@ -58,7 +59,7 @@ def fileset_list():
 
 
 @fileset.command("show")
-@click.argument("fileset")
+@click.argument("fileset", type=FilesetType())
 def fileset_show(fileset):
     """List files from fileset"""
     get_fileset_by_id(fileset).print_data()
@@ -79,7 +80,7 @@ def colorscheme_list():
 
 
 @colorscheme.command("show")
-@click.argument("id")
+@click.argument("id", type=ColorschemeType())
 def colorscheme_show(id):
     """Display colors from colorscheme"""
     get_colorscheme_by_id(id).print_data()
@@ -100,7 +101,7 @@ def typography_list():
 
 
 @typography.command("show")
-@click.argument("id")
+@click.argument("id", type=TypographyType())
 def typography_show(id):
     """Display variables from typography"""
     get_typography_by_id(id).print_data()
@@ -114,14 +115,14 @@ def appearance():
     """Manage appearances"""
 
 
-@typography.command("list")
+@appearance.command("list")
 def appearance_list():
     """Show appearances names and IDs"""
     print_setting_names(get_appearances)
 
 
-@typography.command("show")
-@click.argument("id")
+@appearance.command("show")
+@click.argument("id", type=AppearanceType())
 def appearance_show(id):
     """Display variables from appearance"""
     get_appearance_by_id(id).print_data()
@@ -131,10 +132,10 @@ def appearance_show(id):
 
 
 @cli.command("apply")
-@click.option("--fileset", "-f")
-@click.option("--typography", "-t")
-@click.option("--appearance", "-a")
-@click.option("--colorscheme", "-c")
+@click.option("--fileset", "-f", type=FilesetType())
+@click.option("--typography", "-t", type=TypographyType())
+@click.option("--appearance", "-a", type=AppearanceType())
+@click.option("--colorscheme", "-c", type=ColorschemeType())
 @click.option("--force", "-F", is_flag=True, help="Run even if files changed")
 @click.option("--verbose", "-v", is_flag=True, help="Print additional information")
 def cli_apply(fileset, typography, appearance, colorscheme, force, verbose):
