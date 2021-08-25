@@ -5,6 +5,18 @@ from typing import Any, Dict, Literal, Optional, TypedDict, cast
 
 import click
 
+from dttr.colorutils import (
+    Base16Colorscheme,
+    DttrColorscheme,
+    ParsedColorschemes,
+    TerminalColorscheme,
+    make_alt_color,
+    make_alt_color_inverse,
+    make_average_color,
+    make_brown_from_orange,
+    make_orange_from_yellow,
+    normalize,
+)
 from dttr.config import get_config, get_data_dir
 from dttr.data import (
     AbstractData,
@@ -15,22 +27,7 @@ from dttr.data import (
     get_data_files,
 )
 from dttr.utils import deep_merge, load_toml_cfg_model, print_key_values
-
-from .colp import HEX
-from .models import (
-    Base16Colorscheme,
-    DttrColorscheme,
-    ParsedColorschemes,
-    TerminalColorscheme,
-)
-from .utils import (
-    make_alt_color,
-    make_alt_color_inverse,
-    make_average_color,
-    make_brown_from_orange,
-    make_orange_from_yellow,
-    normalize,
-)
+from dttr.vendor.colp import HEX
 
 
 class ColorschemeConfig(DataFileModel):
