@@ -85,7 +85,7 @@ def get_filesets_dir() -> Path:
     :returns: Filesets directory
     """
 
-    return get_data_dir() / "templates"
+    return get_data_dir() / "filesets"
 
 
 def get_fileset_files():

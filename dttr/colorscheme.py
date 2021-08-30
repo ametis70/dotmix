@@ -109,7 +109,7 @@ def get_colorschemes_dir() -> Path:
 
     :returns: Colorscheme data files directory
     """
-    return get_data_dir() / "colors"
+    return get_data_dir() / "colorschemes"
 
 
 def get_colorscheme_files() -> DataFilesDict:

@@ -25,7 +25,7 @@ def get_typographies_dir():
     :returns: Appearances data files directory
     """
 
-    return get_data_dir() / "themes"
+    return get_data_dir() / "typographies"
 
 
 def get_typography_files() -> DataFilesDict:

@@ -27,7 +27,7 @@ def get_appearances_dir():
     :returns: Appearances data files directory
     """
 
-    return get_data_dir() / "themes"
+    return get_data_dir() / "appearances"
 
 
 def get_appearance_files() -> DataFilesDict:

@@ -199,7 +199,7 @@ def scaffold_data_path() -> None:
         print("Skipping, directory not empty")
         return
 
-    dirs = ["templates", "templates/base", "colors", "fonts", "themes"]
+    dirs = ["filesets", "filesets/base", "colorschemes", "typographies", "appearances"]
 
     for dir in dirs:
         p = path / dir
