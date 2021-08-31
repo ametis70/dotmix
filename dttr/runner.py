@@ -208,10 +208,10 @@ def render_file(file: FileModel, relative_path: str, out_dir: str, vars: Dict) -
     :param vars: Input variables for the template engine
     """
     with open(file.path, "r") as f:
-        rendered = cast(str, chevron.render(f, vars))
         out_file = Path(out_dir) / relative_path
-        os.makedirs(out_file.parent, exist_ok=True)
         print_verbose(f"Rendering file: {str(out_file)}")
+        rendered = cast(str, chevron.render(f, vars, warn=get_verbose()))
+        os.makedirs(out_file.parent, exist_ok=True)
         with out_file.open("w", encoding="utf-8") as out:
             out.write(rendered)
 
