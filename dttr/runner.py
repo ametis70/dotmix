@@ -132,6 +132,10 @@ def verify_checksums() -> List[str]:
     data_dir = get_data_dir()
     modified_files = []
 
+    file = get_checksums_file()
+    if not file.exists():
+        return []
+
     with get_checksums_file().open("r") as f:
         lines = f.readlines()
         for line in lines:
