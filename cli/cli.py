@@ -8,7 +8,13 @@ from dttr.runner import apply
 from dttr.typography import get_typographies, get_typography_by_id
 from dttr.utils import set_verbose
 
-from .completion import AppearanceType, ColorschemeType, FilesetType, TypographyType
+from .completion import (
+    AppearanceType,
+    ColorschemeType,
+    FilesetType,
+    HookType,
+    TypographyType,
+)
 from .utils import print_setting_names
 
 
@@ -136,9 +142,28 @@ def appearance_show(id):
 @click.option("--typography", "-t", type=TypographyType())
 @click.option("--appearance", "-a", type=AppearanceType())
 @click.option("--colorscheme", "-c", type=ColorschemeType())
+@click.option("--pre", type=HookType(), help="Pre hook ID")
+@click.option("--post", type=HookType(), help="Post hook ID")
+@click.option(
+    "--no-defaults",
+    "-N",
+    is_flag=True,
+    help="Disable default data from configuration",
+    default=False,
+)
 @click.option("--force", "-F", is_flag=True, help="Run even if files changed")
 @click.option("--verbose", "-v", is_flag=True, help="Print additional information")
-def cli_apply(fileset, typography, appearance, colorscheme, force, verbose):
+def cli_apply(
+    fileset,
+    typography,
+    appearance,
+    colorscheme,
+    pre,
+    post,
+    no_defaults,
+    force,
+    verbose,
+):
     """Generate output files from fileset and data"""
 
     if verbose:
@@ -149,6 +174,9 @@ def cli_apply(fileset, typography, appearance, colorscheme, force, verbose):
         typography_id=typography,
         appearance_id=appearance,
         colorscheme_id=colorscheme,
+        pre_hook=pre,
+        post_hook=post,
+        use_defaults=not no_defaults,
         force=force,
         interactive=True,
     )
