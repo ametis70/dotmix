@@ -105,8 +105,9 @@ def load_toml_cfg(path: Path) -> Optional[Dict]:
     except PermissionError:
         print_err(f"Cannot access {path} due to wrong permissions", True)
 
-    except TomlDecodeError:
-        print_err(f"Invalid TOML syntax in {path}", True)
+    except TomlDecodeError as e:
+        print_err(f"Invalid TOML syntax in {path}")
+        raise (e)
 
     finally:
         if fd and not fd.closed:
