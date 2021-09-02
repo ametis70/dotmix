@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Dict, List, Optional, cast
+from typing import Callable, Dict, List, Optional, cast
 
 import chevron
 import click
@@ -61,6 +61,15 @@ def get_hooks_dir() -> Path:
     """
 
     return get_data_dir() / "hooks"
+
+
+def get_hooks() -> List[str]:
+    """Get hook filenames names (IDs).
+
+    :returns: List of hooks IDs
+    """
+    func: Callable[[Path], str] = lambda p: p.name
+    return list(map(func, get_hooks_dir().iterdir()))
 
 
 def run_hook(hook: str) -> int:
