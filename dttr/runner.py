@@ -75,6 +75,9 @@ def get_hooks() -> List[str]:
 def run_hook(hook: str) -> int:
     """Run a hook in a subprocess and return its return code
 
+    The hook subprocess will be able to access the output directory through the
+    ``$DTTR_OUT`` environment variable.
+
     :param hook: Filename of the hook
 
     :returns: Hook subprocess return code
@@ -82,6 +85,7 @@ def run_hook(hook: str) -> int:
 
     return_code: int = 1
     hook_file = get_hooks_dir() / hook
+
     try:
         if not hook_file.exists:
             raise FileNotFoundError
@@ -89,6 +93,7 @@ def run_hook(hook: str) -> int:
         if not os.access(str(hook_file), os.X_OK):
             raise PermissionError
 
+        os.environ["DTTR_OUT"] = str(get_out_dir())
         p = subprocess.run(hook_file)
 
         return_code = p.returncode
