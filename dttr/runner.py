@@ -340,6 +340,11 @@ def apply(
         print_pair("Appearance", f"{appearance.name} ({appearance.id})")
     if typography:
         print_pair("Typography", f"{typography.name} ({typography.id})")
+    if pre_hook:
+        print_pair("Pre hook", pre_hook)
+    if post_hook:
+        print_pair("Post hook", post_hook)
+
     click.echo("")
 
     if get_verbose():
