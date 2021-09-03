@@ -155,9 +155,10 @@ def verify_checksums() -> List[str]:
         for line in lines:
             digest, file = line.split()
             path = Path(data_dir, file)
-            hash = hash_file(path)
-            if hash != digest:
-                modified_files.append(file)
+            if path.exists():
+                hash = hash_file(path)
+                if hash != digest:
+                    modified_files.append(file)
 
     return modified_files
 
