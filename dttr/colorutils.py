@@ -1,7 +1,7 @@
 """This module contains the utilitary models and functions needed by
 :mod:`dttr.colorscheme` """
 
-from typing import Callable, List, Optional, cast
+from typing import Any, Callable, Optional, TypeVar, cast
 
 from pydantic import BaseModel
 
@@ -149,15 +149,21 @@ class DttrColorscheme(BaseModel):
     alt_brown: str
 
 
-def check_hex(func: Callable[[List[HEX]], str]):
+HexSafeFunction = TypeVar(
+    "HexSafeFunction",
+    bound=Callable[..., Any],
+)
+"""Type for functions that take hexadecimal color codes as inputs"""
+
+
+def check_hex(func: HexSafeFunction) -> HexSafeFunction:
     """Decorator to check if the colors passed to a function are valid hexadecimal
     codes.
 
     :param func: The function to be called if the value is valid
     """
 
-    def inner(*args: Optional[str]):
-        colors: List[HEX] = []
+    def inner(*args: str, **kwargs):
         for arg in args:
             try:
                 if not arg:
@@ -166,19 +172,17 @@ def check_hex(func: Callable[[List[HEX]], str]):
                 print_err(f"Called {f} with empty color", True)
 
             try:
-                c = cast(HEX, HEX(arg))
+                HEX(arg)
             except ValueError:
                 print_err(f"{arg} is not a valid hex color string", True)
 
-            colors.append(c)  # type: ignore
+        return func(*args, **kwargs)
 
-        return func(colors)
-
-    return inner
+    return cast(HexSafeFunction, inner)
 
 
 @check_hex
-def normalize(colors: List[HEX]) -> str:
+def normalize(color: Optional[str]) -> str:
     """Convert ``colp.HEX`` to ``str``.
 
     This can be used to make al hex representations look the same.
@@ -186,63 +190,57 @@ def normalize(colors: List[HEX]) -> str:
     :param colors: List of colors (only the first is used)
     :returns: Color heaxedecimal normalized in the form of "#000FFF"
     """
-    return str(colors[0])
+    return str(HEX(color))
 
 
 @check_hex
-def make_alt_color(colors: List[HEX]) -> str:
+def make_alt_color(color: Optional[str], inverse: bool = False) -> str:
     """Make a darker color of a lighter one or a lighter one of a darker one
 
-    :param colors: List of colors (only the first is used)
+    :param color: Base color
+    :param inverse: Invert how this function works
     :returns: Color heaxedecimal normalized in the form of "#000FFF"
     """
-    c = colors[0]
-    return str(c.darker(1.25) if c.brightness() > 0.5 else c.brighter(1.25))
+    c = HEX(color)
+    if not inverse:
+        return str(c.darker(1.25) if c.brightness() > 0.5 else c.darker(0.75))
+    else:
+        return str(c.darker(0.75) if c.brightness() > 0.5 else c.darker(1.25))
 
 
 @check_hex
-def make_alt_color_inverse(colors: List[HEX]) -> str:
-    """Make a darker color of a darker one or a lighter one of a lighter one
-
-    :param colors: List of colors (only the first is used)
-    :returns: Color heaxedecimal normalized in the form of "#000FFF"
-    """
-    c = colors[0]
-    return str(c.darker(1.1) if c.brightness() < 0.5 else c.brighter(1.1))
-
-
-@check_hex
-def make_orange_from_yellow(colors: List[HEX]) -> str:
+def make_orange_from_yellow(color: Optional[str]) -> str:
     """Make a "orange" color from a "yellow" one
 
-    :param colors: List of colors (only the first is used)
+    :param color: Yellow color
     :returns: Color heaxedecimal normalized in the form of "#000FFF"
     """
-    c = colors[0]
+    c = HEX(color)
     return str(c.rotate(-15))
 
 
 @check_hex
-def make_brown_from_orange(colors: List[HEX]) -> str:
+def make_brown_from_orange(color: Optional[str]) -> str:
     """Make a "brown" color from a "orange" one
 
-    :param colors: List of colors (only the first is used)
+    :param color: Orange color
     :returns: Color heaxedecimal normalized in the form of "#000FFF"
     """
-    c = colors[0]
+    c = HEX(color)
     return str(c.rotate(-10).darker(1.1))
 
 
 @check_hex
-def make_average_color(colors: List[HEX]) -> str:
+def make_average_color(color1: Optional[str], color2: Optional[str]) -> str:
     """Get the average color of two colors
 
-    :param colors: List colors (only the first two are used)
+    :param color1: First color
+    :param color2: Second color
     :returns: Color heaxedecimal normalized in the form of "#000FFF"
     """
     try:
-        a = colors[0]
-        b = colors[1]
+        a = HEX(color1)
+        b = HEX(color2)
     except IndexError:
         print_err("make_average_color requires a list of two items", True)
 

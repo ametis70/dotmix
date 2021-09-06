@@ -12,7 +12,6 @@ from dttr.colorutils import (
     ParsedColorschemes,
     TerminalColorscheme,
     make_alt_color,
-    make_alt_color_inverse,
     make_average_color,
     make_brown_from_orange,
     make_orange_from_yellow,
@@ -253,6 +252,6 @@ def compute_colorscheme_from_terminal(
     color_dict["selection"] = make_average_color(
         color_dict["light_bg"], color_dict["comment"]
     )
-    color_dict["lighter_fg"] = make_alt_color_inverse(color_dict["light_fg"])
+    color_dict["lighter_fg"] = make_alt_color(color_dict["light_fg"], inverse=True)
 
     return DttrColorscheme.parse_obj(color_dict)
