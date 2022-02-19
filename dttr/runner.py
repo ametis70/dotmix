@@ -205,7 +205,7 @@ def get_settings(
 
         settings = getter(default_id)
         if not settings:
-            print_err(f"Invalid id for {field} from defaults", True)
+            return print_err(f"Invalid id for {field} from defaults", True)
 
         click.secho(f"Using default settings ({settings.id}) for {field} from defaults")
         return settings
@@ -213,7 +213,7 @@ def get_settings(
     else:
         settings = getter(id)
         if not settings:
-            print_err(f"Settings {id} not found for {field}", True)
+            return print_err(f"Settings {id} not found for {field}", True)
 
         return settings
 
@@ -311,12 +311,12 @@ def apply(
     fileset = get_settings("fileset", fileset_id, get_fileset_by_id, use_defaults)
 
     if not fileset:
-        print_err("No fileset specified", True)
+        return print_err("No fileset specified", True)
 
     modified_files = verify_checksums()
     print_modified_files(modified_files)
     if modified_files and not force:
-        print_err(
+        return print_err(
             "Please discard the changes or run with -F/--force flag",
             True,
         )
@@ -374,7 +374,7 @@ def apply(
             click.echo(f"Running pre hook: {pre_hook}")
             code = run_hook(pre_hook)
             if code != 0:
-                print_err(f"Hook {pre_hook} finished with an error", True)
+                return print_err(f"Hook {pre_hook} finished with an error", True)
 
         out_dir = get_out_dir()
         backup_dir = get_out_backup_dir()
