@@ -1,7 +1,3 @@
-<p align="center" width="100%">
-    <img width="50%" src="https://github.com/ianmethyst/dotmix/blob/main/docs/logo.svg" alt="dotmix's logo" />
-</p>
-
 dotmix is a template based solution to managing your dotfiles
 
 # How it works
