@@ -6,9 +6,9 @@ from typing import Any, Dict, Literal, Optional, TypedDict, cast
 
 import click
 
-from dttr.colorutils import (
+from dotmix.colorutils import (
     Base16Colorscheme,
-    DttrColorscheme,
+    DotmixColorscheme,
     ParsedColorschemes,
     TerminalColorscheme,
     make_alt_color,
@@ -17,8 +17,8 @@ from dttr.colorutils import (
     make_orange_from_yellow,
     normalize,
 )
-from dttr.config import get_config, get_data_dir
-from dttr.data import (
+from dotmix.config import get_config, get_data_dir
+from dotmix.data import (
     AbstractData,
     DataFileModel,
     DataFilesDict,
@@ -26,8 +26,8 @@ from dttr.data import (
     get_data_by_id,
     get_data_files,
 )
-from dttr.utils import deep_merge, load_toml_cfg_model, print_key_values
-from dttr.vendor.colp import HEX
+from dotmix.utils import deep_merge, load_toml_cfg_model, print_key_values
+from dotmix.vendor.colp import HEX
 
 
 class ColorschemeDataFileModel(DataFileModel):
@@ -39,7 +39,7 @@ class ColorschemeDataFileModel(DataFileModel):
 class ColorschemeData(TypedDict):
     """Computed data type for colorscheme"""
 
-    colors: DttrColorscheme
+    colors: dotmixColorscheme
     custom: Dict[str, Any]
 
 
@@ -140,11 +140,11 @@ def get_colorscheme_by_id(id: str) -> Optional[Colorscheme]:
     return get_data_by_id(id, get_colorscheme_files(), Colorscheme)
 
 
-def compute_colors(colors: ParsedColorschemes) -> DttrColorscheme:
-    """Function called by :meth:`dttr.colorscheme.Colorscheme.compute_data` to generate
+def compute_colors(colors: ParsedColorschemes) -> dotmixColorscheme:
+    """Function called by :meth:`dotmix.colorscheme.Colorscheme.compute_data` to generate
     a colorscheme that can be used by the template engine
 
-    Read the enviorment variable ``DTTR_COLORMODE`` to determine what function to call
+    Read the enviorment variable ``DOTMIX_COLORMODE`` to determine what function to call
     based on the colormode. If the variable is not set, it will fall back to reading
     the configuration file.
 
@@ -152,7 +152,7 @@ def compute_colors(colors: ParsedColorschemes) -> DttrColorscheme:
     :returns: Ready to use colorscheme
     """
     colormode = Optional[Literal["terminal", "base16"]]
-    env = os.getenv("DTTR_COLORMODE")
+    env = os.getenv("DOTMIX_COLORMODE")
     if env == "terminal" or env == "base16":
         colormode = env
     else:
@@ -170,8 +170,8 @@ def compute_colors(colors: ParsedColorschemes) -> DttrColorscheme:
 
 def compute_colorscheme_from_base16(
     colors: Base16Colorscheme,
-) -> DttrColorscheme:
-    """Generate a dttr colorscheme from a base16 colorscheme model instance.
+) -> dotmixColorscheme:
+    """Generate a dotmix colorscheme from a base16 colorscheme model instance.
 
     :param colors: Instance of parsed base16 colorscheme model
     :returns: Ready to use colorscheme
@@ -208,13 +208,13 @@ def compute_colorscheme_from_base16(
     color_dict["alt_magenta"] = make_alt_color(c.base0E)
     color_dict["alt_brown"] = make_alt_color(c.base0F)
 
-    return DttrColorscheme.parse_obj(color_dict)
+    return dotmixColorscheme.parse_obj(color_dict)
 
 
 def compute_colorscheme_from_terminal(
     colors: TerminalColorscheme,
-) -> DttrColorscheme:
-    """Generate a dttr colorscheme from a terminal colorscheme model instance.
+) -> dotmixColorscheme:
+    """Generate a dotmix colorscheme from a terminal colorscheme model instance.
 
     :param colors: Instance of parsed terminal colorscheme model
     :retunrs: Ready to use colorscheme
@@ -254,4 +254,4 @@ def compute_colorscheme_from_terminal(
     )
     color_dict["lighter_fg"] = make_alt_color(color_dict["light_fg"], inverse=True)
 
-    return DttrColorscheme.parse_obj(color_dict)
+    return dotmixColorscheme.parse_obj(color_dict)

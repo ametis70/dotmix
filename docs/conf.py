@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath("../"))
 
 # -- Project information -----------------------------------------------------
 
-project = "dttr"
+project = "dotmix"
 copyright = "2021, Ian Mancini"
 author = "Ian Mancini"
 
@@ -36,7 +36,7 @@ extensions = [
 
 autodoc_typehints = "description"
 
-autoapi_dirs = ["../dttr"]
+autoapi_dirs = ["../dotmix"]
 autoapi_type = "python"
 autoapi_template_dir = "./_templates/autoapi"
 

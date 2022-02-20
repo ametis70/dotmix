@@ -8,14 +8,14 @@ from typing import Literal, Optional
 import toml
 from pydantic import BaseModel
 
-from dttr.utils import get_path_from_env, load_toml_cfg_model, print_err
+from dotmix.utils import get_path_from_env, load_toml_cfg_model, print_err
 
 # Types:
 
 DefaultSettingType = Literal[
     "colorscheme", "typography", "fileset", "appearance", "pre_hook", "post_hook"
 ]
-"""Possible keys for ``dttr.config.DefaultsConfig``"""
+"""Possible keys for ``dotmix.config.DefaultsConfig``"""
 
 
 # Models:
@@ -79,7 +79,7 @@ class Config(BaseModel):
 def generate_config(data_path: Path) -> str:
     """Generate the default configuration.
 
-    :return: Returns a valid dttr TOML config"""
+    :return: Returns a valid dotmix TOML config"""
 
     cfg = Config(
         general={
@@ -96,12 +96,12 @@ def get_data_dir() -> Path:
     """Get the data directory's path, where all data files, hooks and output files are
     stored.
 
-    By default, the path is is ``$XDG_DATA_HOME/dttr``, but it can be modified by
-    setting the environemt variable ``$DTTR_DATA_DIR``.
+    By default, the path is is ``$XDG_DATA_HOME/dotmix``, but it can be modified by
+    setting the environemt variable ``$DOTMIX_DATA_DIR``.
 
     :return: Data path
     """
-    env_vars = ["DTTR_DATA_DIR", ("XDG_DATA_HOME", True)]
+    env_vars = ["DOTMIX_DATA_DIR", ("XDG_DATA_HOME", True)]
 
     return Path(get_path_from_env(env_vars))
 
@@ -109,18 +109,18 @@ def get_data_dir() -> Path:
 def get_config_dir() -> Path:
     """Get the configuration directory's path, where the configuration is stored.
 
-    By default, the path is is ``$XDG_CONFIG_HOME/dttr``, but it can be modified by
-    setting the environemt variable ``$DTTR_CONFIG_DIR``.
+    By default, the path is is ``$XDG_CONFIG_HOME/dotmix``, but it can be modified by
+    setting the environemt variable ``$DOTMIX_CONFIG_DIR``.
 
     :return: Config path"""
 
-    env_vars = ["DTTR_CONFIG_DIR", ("XDG_CONFIG_HOME", True)]
+    env_vars = ["DOTMIX_CONFIG_DIR", ("XDG_CONFIG_HOME", True)]
 
     return Path(get_path_from_env(env_vars))
 
 
 def get_config() -> Config:
-    """Reads the configuration file and returns a :class:`dttr.config.Config` instance
+    """Reads the configuration file and returns a :class:`dotmix.config.Config` instance
 
     :returns: Parsed configuration model instance
     """
@@ -136,7 +136,7 @@ def get_config() -> Config:
 
 
 def get_default_setting(type: DefaultSettingType) -> Optional[str]:
-    """Get the value of one key from :class:`dttr.config.DefaultsConfig` if it is
+    """Get the value of one key from :class:`dotmix.config.DefaultsConfig` if it is
     defined in the config
 
     :return: String with the value associated with the key if it exists
@@ -159,11 +159,11 @@ def create_config(
 
     This function takes to optional parameters to change the configuration directory and
     data directory, but they are just for testing purposes. To change those values when
-    when using the CLI, modify the ``$DTTR_CONFIG_DIR`` and ``$DTTR_DATA_DIR``
+    when using the CLI, modify the ``$DOTMIX_CONFIG_DIR`` and ``$DOTMIX_DATA_DIR``
     environment variables
 
     :param config_path: override the config path returned
-        by :func:`dttr.Config.get_config_dir`
+        by :func:`dotmix.Config.get_config_dir`
     """
 
     if not config_path:

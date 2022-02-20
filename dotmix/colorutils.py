@@ -1,12 +1,12 @@
 """This module contains the utilitary models and functions needed by
-:mod:`dttr.colorscheme` """
+:mod:`dotmix.colorscheme` """
 
 from typing import Any, Callable, Optional, TypeVar, cast
 
 from pydantic import BaseModel
 
-from dttr.utils import print_err
-from dttr.vendor.colp import HEX, RGB
+from dotmix.utils import print_err
+from dotmix.vendor.colp import HEX, RGB
 
 
 class Base16Colorscheme(BaseModel):
@@ -112,8 +112,8 @@ class ParsedColorschemes(BaseModel):
     base16: Base16Colorscheme
 
 
-class DttrColorscheme(BaseModel):
-    """Model for the dttr colorscheme.
+class DotmixColorscheme(BaseModel):
+    """Model for the dotmix colorscheme.
 
     Depending on the input colorscheme (e.g terminal or base16), some of these colors
     may be generated from others as needed.

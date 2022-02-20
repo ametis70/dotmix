@@ -3,8 +3,8 @@
 from functools import cache, cached_property
 from typing import Dict, Optional
 
-from dttr.config import get_data_dir
-from dttr.data import (
+from dotmix.config import get_data_dir
+from dotmix.data import (
     BasicData,
     DataFilesDict,
     get_all_data_instances,

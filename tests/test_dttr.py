@@ -1,4 +1,4 @@
-from dttr import __version__
+from dotmix import __version__
 
 
 def test_version():

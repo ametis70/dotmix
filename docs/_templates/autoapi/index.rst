@@ -1,10 +1,10 @@
 API Reference
 =============
 
-This the module index where all the models, classes and functions that make the dttr library are documented. The CLI isn't documented but is built on top of the library using click.
+This the module index where all the models, classes and functions that make the dotmix library are documented. The CLI isn't documented but is built on top of the library using click.
 
 .. note::
-   This part of the documentation is only useful if you're planning to contribute to dttr's development or if you're building a new tool that extends or interacts with dttr in some way. If you only need to use dttr, check the :doc:`usage` page
+   This part of the documentation is only useful if you're planning to contribute to dotmix's development or if you're building a new tool that extends or interacts with dotmix in some way. If you only need to use dotmix, check the :doc:`usage` page
 
 .. note::
     This page contains auto-generated API reference documentation [#f1]_.

@@ -1,12 +1,12 @@
 <p align="center" width="100%">
-    <img width="50%" src="https://github.com/ianmethyst/dttr/blob/main/docs/logo.svg" alt="dttr's logo" />
+    <img width="50%" src="https://github.com/ianmethyst/dotmix/blob/main/docs/logo.svg" alt="dotmix's logo" />
 </p>
 
-dttr (pronounced as dotter) is a template based solution to managing your dotfiles
+dotmix is a template based solution to managing your dotfiles
 
 # How it works
 
-dttr uses several configuration files to specify keys and values that will replace placeholders in your dotfiles to
+dotmix uses several configuration files to specify keys and values that will replace placeholders in your dotfiles to
 modify them all at once and with minimal effort. This enables changing colors, layout and typographic variables quickly
 in multiple programs without digging in all the configuration files (more than once) and keeping different "themes" that
 go beyond what a GTK theme or a terminal colorscheme alone can offer in terms of customizability.
@@ -16,7 +16,7 @@ reloading your window manager to make the changes in the configuration effective
 
 ## Formats
 
-For the time being, dttr supports [TOML](https://toml.io/en/) as its configuration file format and
+For the time being, dotmix supports [TOML](https://toml.io/en/) as its configuration file format and
 [moustache](https://mustache.github.io/) as its templating system.
 
 ## Configuration

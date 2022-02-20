@@ -2,7 +2,7 @@ from typing import Callable, Dict
 
 import click
 
-from dttr.data import DataClassType
+from dotmix.data import DataClassType
 
 
 def print_setting_names(func: Callable[[], Dict[str, DataClassType]]):

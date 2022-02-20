@@ -8,7 +8,7 @@ from typing import Dict, List, Optional
 import click
 from pydantic import BaseModel
 
-from dttr.data import (
+from dotmix.data import (
     AbstractData,
     DataFileModel,
     DataFilesDict,

@@ -10,14 +10,14 @@ from pydantic.error_wrappers import ValidationError
 from pydantic.main import BaseModel
 from toml import TomlDecodeError
 
-VERBOSE = "DTTR_VERBOSE"
+VERBOSE = "DOTMIX_VERBOSE"
 """Environment variable name to determine if more information should be printed"""
 
 
 def get_verbose() -> bool:
     """Get verbosity.
 
-    :return: true if dttr is running in verbose mode
+    :return: true if dotmix is running in verbose mode
     """
     return bool(os.getenv(VERBOSE))
 
@@ -43,7 +43,7 @@ def get_path_from_env(env_vars: List[Union[str, Tuple[str, bool]]]) -> str:
     :param env_vars: List that contains strings or tuples with a string and
     a boolean. In both cases, the string is the name of the env var to
     get the path from, while on the tuple the second parameter is used to
-    determine if ``/dttr/`` should be appended to the path of the environment
+    determine if ``/dotmix/`` should be appended to the path of the environment
     variable.
 
     :returns: The first environment variable that is set.
@@ -74,7 +74,7 @@ def get_path_from_env(env_vars: List[Union[str, Tuple[str, bool]]]) -> str:
 
         if value:
             if append:
-                value += "/dttr/"
+                value += "/dotmix/"
             return value
 
     print_err(f"Any of the following env vars must be set:\n{print_env_vars()}")

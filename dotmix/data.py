@@ -24,7 +24,7 @@ from typing import (
 
 from pydantic import BaseModel
 
-from dttr.utils import (
+from dotmix.utils import (
     deep_merge,
     load_toml_cfg,
     load_toml_cfg_model,
@@ -36,28 +36,28 @@ from dttr.utils import (
 # Types:
 
 DataClassType = TypeVar("DataClassType", bound="AbstractData")
-"""Type for classes that extend :class:`dttr.data.AbstractData`"""
+"""Type for classes that extend :class:`dotmix.data.AbstractData`"""
 
 DataFileModelType = TypeVar("DataFileModelType", bound="DataFileModel")
-"""Type for models that are submodels of :class:`dttr.data.DataFileModel``"""
+"""Type for models that are submodels of :class:`dotmix.data.DataFileModel``"""
 
 DataType = TypeVar("DataType", bound=Union[TypedDict, BaseModel, Dict])
 """This type represent which values the computed data for
-:class:`dttr.data.AbstractData` can take"""
+:class:`dotmix.data.AbstractData` can take"""
 
 
 GenericDataGetter = Callable[[str], Optional[DataClassType]]
 """Callable typing for functions that return instances of subclasses
-of :class:`dttr.data.AbstractData`"""
+of :class:`dotmix.data.AbstractData`"""
 
 
 CustomDictTypes = Union[str, bool, int, List, Dict]
-"""Types for the custom dict of :class:`dttr.data.DataFileModel`"""
+"""Types for the custom dict of :class:`dotmix.data.DataFileModel`"""
 
 
 class DataFileMetadata(TypedDict):
     """Typing for the dictionary that is returned by
-    :func:`dttr.data.get_config_files`"""
+    :func:`dotmix.data.get_config_files`"""
 
     id: str
     name: str
@@ -65,7 +65,7 @@ class DataFileMetadata(TypedDict):
 
 
 DataFilesDict = Dict[str, DataFileMetadata]
-"""Dictionary of :class:`dttr.data.DataFileMetadata`"""
+"""Dictionary of :class:`dotmix.data.DataFileMetadata`"""
 
 
 # Models:
@@ -126,13 +126,13 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
     @abstractmethod
     def load_data_file() -> None:
         """This method loads (parses and validate) the data file for this instance (see
-        :attr:`dttr.data.AbstractData.data_file_path`)"""
+        :attr:`dotmix.data.AbstractData.data_file_path`)"""
         pass
 
     @property
     def file_data(self) -> Optional[DataFileModelType]:
         """Get the parsed file data model instance. If it is not loaded yet, this
-            function will call :meth:`dttr.data.AbstractData.load_data_file` first
+            function will call :meth:`dotmix.data.AbstractData.load_data_file` first
 
         :returns: Loaded data from instance data file
         """
@@ -144,7 +144,7 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
     @file_data.setter
     def file_data(self, value: DataFileModelType) -> None:
         """Setter for ``file_data``. This setter is meant to be used by
-        :meth:`dttr.data.AbstractData.load_data_file`"""
+        :meth:`dotmix.data.AbstractData.load_data_file`"""
         self._file_data = value
 
     @property
@@ -159,7 +159,7 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
         probably have inherited values from that instances too.
 
         If the data is not computed yet, this will call
-        :meth:`dttr.data.AbstractData.compute_data` first
+        :meth:`dotmix.data.AbstractData.compute_data` first
         """
 
         if not self._computed_data:
@@ -170,14 +170,14 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
     @data.setter
     def data(self, value: DataType) -> None:
         """Setter for ``data``. This setter is meant to be used by
-        :meth:`dttr.data.AbstractData.compute_data`"""
+        :meth:`dotmix.data.AbstractData.compute_data`"""
 
         self._computed_data = value
 
     @abstractmethod
     def compute_data(self) -> None:
         """This method should be implemented by subclasses to populate
-        :attr:`dttr.data.AbstractData.data` property with the values that subclass
+        :attr:`dotmix.data.AbstractData.data` property with the values that subclass
         expects"""
         pass
 
@@ -189,7 +189,7 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
     @cached_property
     @abstractmethod
     def parents(self) -> List[DataClassType]:
-        """This method uses :meth:`dttr.data.AbstractData._get_parents` to get parents
+        """This method uses :meth:`dotmix.data.AbstractData._get_parents` to get parents
         recursively.
 
         :returns: List with this instance on the first index followed by its parents
@@ -206,7 +206,7 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
         """Class method that tecursively populates and returns a list with the class
         instance and all parents (extended) instances
 
-        This is meant to be called in :attr:`dttr.data.AbstractData.parents` with a
+        This is meant to be called in :attr:`dotmix.data.AbstractData.parents` with a
         ``get_all_instances`` function that returns the config files that can be
         used with this particular subclass
         """
@@ -240,7 +240,7 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
 
 
 class BasicData(AbstractData[DataFileModel, BaseModel]):
-    """Abstract data class for subclasses that use :class:`dttr.data.DataFileModel` as it
+    """Abstract data class for subclasses that use :class:`dotmix.data.DataFileModel` as it
     file data model and :class:`pydantic.BaseModel` as its (custom) data type
     """
 
@@ -306,8 +306,8 @@ def get_data_by_id(
     function with specific ``files`` and ``cls`` parameters.
 
     :param id: The id string that identifies the data class instance
-    :param files: :data:`dttr.data.DataFilesDict` returned by
-        :func:`dttr.data.get_data_files`
+    :param files: :data:`dotmix.data.DataFilesDict` returned by
+        :func:`dotmix.data.get_data_files`
     :param cls: Concrete class to construct the data instance
     """
     try:
@@ -328,9 +328,9 @@ def get_all_data_instances(
     Every submodule that defines a data class should define a function that calls this
     function with specific ``files`` and ``getter`` parameters.
 
-    :param files: :data:`dttr.data.DataFilesDict` returned by
-        :func:`dttr.data.get_data_files`
-    :param getter: Generic function that calls :func:`dttr.data.get_data_by_id` to
+    :param files: :data:`dotmix.data.DataFilesDict` returned by
+        :func:`dotmix.data.get_data_files`
+    :param getter: Generic function that calls :func:`dotmix.data.get_data_by_id` to
         return a data class instance
     """
 

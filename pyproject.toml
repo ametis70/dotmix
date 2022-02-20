@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "dttr"
+name = "dotmix"
 version = "0.1.0"
-description = "dttr (dotter) is a library and a cli that offers a template based solution to managing your dotfiles"
+description = "dotmix is a library and a cli that offers a template based solution to managing your dotfiles"
 authors = ["Ian Mancini <ianmethyst@gmail.com>"]
 
 [tool.poetry.dependencies]
@@ -26,7 +26,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-dttr = "cli:cli"
+dotmix = "cli:cli"
 
 [tool.black]
 target-version = ['py39']

@@ -1,11 +1,11 @@
 from click import ParamType
 from click.shell_completion import CompletionItem
 
-from dttr.appearance import get_appearances
-from dttr.colorscheme import get_colorschemes
-from dttr.fileset import get_filesets
-from dttr.runner import get_hooks
-from dttr.typography import get_typographies
+from dotmix.appearance import get_appearances
+from dotmix.colorscheme import get_colorschemes
+from dotmix.fileset import get_filesets
+from dotmix.runner import get_hooks
+from dotmix.typography import get_typographies
 
 
 class IdType(ParamType):

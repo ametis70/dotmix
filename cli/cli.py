@@ -1,12 +1,12 @@
 import click
 
-from dttr.appearance import get_appearance_by_id, get_appearances
-from dttr.colorscheme import get_colorscheme_by_id, get_colorschemes
-from dttr.config import create_config, scaffold_data_path
-from dttr.fileset import get_fileset_by_id, get_filesets
-from dttr.runner import apply
-from dttr.typography import get_typographies, get_typography_by_id
-from dttr.utils import set_verbose
+from dotmix.appearance import get_appearance_by_id, get_appearances
+from dotmix.colorscheme import get_colorscheme_by_id, get_colorschemes
+from dotmix.config import create_config, scaffold_data_path
+from dotmix.fileset import get_fileset_by_id, get_filesets
+from dotmix.runner import apply
+from dotmix.typography import get_typographies, get_typography_by_id
+from dotmix.utils import set_verbose
 
 from .completion import (
     AppearanceType,
@@ -28,7 +28,7 @@ def cli():
 
 @cli.group()
 def config():
-    """Configure dttr"""
+    """Configure dotmix"""
 
 
 @config.command("init")
@@ -38,7 +38,7 @@ def config():
     is_flag=True,
 )
 def init(force):
-    """Initialize dttr config and data directory"""
+    """Initialize dotmix config and data directory"""
     if force and click.confirm(
         "Are you sure you want to recreate the default config?", abort=True
     ):

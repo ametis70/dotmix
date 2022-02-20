@@ -1,4 +1,4 @@
-""" Module for running dttr. This module contains functions to work with the template
+""" Module for running dotmix. This module contains functions to work with the template
     engine, computing checksums and running hooks"""
 import hashlib
 import os
@@ -12,13 +12,13 @@ from typing import Callable, Dict, List, Optional, cast
 import chevron
 import click
 
-from dttr.appearance import Appearance, get_appearance_by_id
-from dttr.colorscheme import Colorscheme, get_colorscheme_by_id
-from dttr.config import DefaultSettingType, get_data_dir, get_default_setting
-from dttr.data import DataClassType, GenericDataGetter
-from dttr.fileset import FileModel, Fileset, get_fileset_by_id
-from dttr.typography import Typography, get_typography_by_id
-from dttr.utils import (
+from dotmix.appearance import Appearance, get_appearance_by_id
+from dotmix.colorscheme import Colorscheme, get_colorscheme_by_id
+from dotmix.config import DefaultSettingType, get_data_dir, get_default_setting
+from dotmix.data import DataClassType, GenericDataGetter
+from dotmix.fileset import FileModel, Fileset, get_fileset_by_id
+from dotmix.typography import Typography, get_typography_by_id
+from dotmix.utils import (
     get_verbose,
     print_err,
     print_key_values,
@@ -76,7 +76,7 @@ def run_hook(hook: str) -> int:
     """Run a hook in a subprocess and return its return code
 
     The hook subprocess will be able to access the output directory through the
-    ``$DTTR_OUT`` environment variable.
+    ``$DOTMIX_OUT`` environment variable.
 
     :param hook: Filename of the hook
 
@@ -93,7 +93,7 @@ def run_hook(hook: str) -> int:
         if not os.access(str(hook_file), os.X_OK):
             raise PermissionError
 
-        os.environ["DTTR_OUT"] = str(get_out_dir())
+        os.environ["DOTMIX_OUT"] = str(get_out_dir())
         p = subprocess.run(hook_file)
 
         return_code = p.returncode
@@ -185,7 +185,7 @@ def get_settings(
     """Function to get a data instance from an ID (if specified) or its default value
         from the defaults configuration (if defined).
 
-    The defaults configuration is defined in :mod:`dttr.config`.
+    The defaults configuration is defined in :mod:`dotmix.config`.
 
     :param field: Data file/class type
     :param id: ID of the data to get
@@ -290,7 +290,7 @@ def apply(
     force: bool = False,
     interactive: bool = False,
 ) -> None:
-    """Main function of dttr.
+    """Main function of dotmix.
 
     This will get the data instances , check for modified files, render files, write
     checksums and run hooks.
@@ -333,7 +333,7 @@ def apply(
 
     vars = merge_data(colorscheme, typography, appearance)
 
-    click.echo("Running dttr with the following settings:\n")
+    click.echo("Running dotmix with the following settings:\n")
     print_pair("Fileset", f"{fileset.name} ({fileset.id})")
     if colorscheme:
         print_pair("Colorscheme", f"{colorscheme.name} ({colorscheme.id})")
@@ -366,7 +366,7 @@ def apply(
 
     click.echo("")
 
-    with tempfile.TemporaryDirectory(prefix="dttr_out") as tmp_dir:
+    with tempfile.TemporaryDirectory(prefix="dotmix_out") as tmp_dir:
         if fileset:
             render_fileset(fileset, tmp_dir, vars)
 
