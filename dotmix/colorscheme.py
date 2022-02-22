@@ -39,7 +39,7 @@ class ColorschemeDataFileModel(DataFileModel):
 class ColorschemeData(TypedDict):
     """Computed data type for colorscheme"""
 
-    colors: dotmixColorscheme
+    colors: DotmixColorscheme
     custom: Dict[str, Any]
 
 
@@ -140,7 +140,7 @@ def get_colorscheme_by_id(id: str) -> Optional[Colorscheme]:
     return get_data_by_id(id, get_colorscheme_files(), Colorscheme)
 
 
-def compute_colors(colors: ParsedColorschemes) -> dotmixColorscheme:
+def compute_colors(colors: ParsedColorschemes) -> DotmixColorscheme:
     """Function called by :meth:`dotmix.colorscheme.Colorscheme.compute_data` to generate
     a colorscheme that can be used by the template engine
 
@@ -170,7 +170,7 @@ def compute_colors(colors: ParsedColorschemes) -> dotmixColorscheme:
 
 def compute_colorscheme_from_base16(
     colors: Base16Colorscheme,
-) -> dotmixColorscheme:
+) -> DotmixColorscheme:
     """Generate a dotmix colorscheme from a base16 colorscheme model instance.
 
     :param colors: Instance of parsed base16 colorscheme model
@@ -208,12 +208,12 @@ def compute_colorscheme_from_base16(
     color_dict["alt_magenta"] = make_alt_color(c.base0E)
     color_dict["alt_brown"] = make_alt_color(c.base0F)
 
-    return dotmixColorscheme.parse_obj(color_dict)
+    return DotmixColorscheme.parse_obj(color_dict)
 
 
 def compute_colorscheme_from_terminal(
     colors: TerminalColorscheme,
-) -> dotmixColorscheme:
+) -> DotmixColorscheme:
     """Generate a dotmix colorscheme from a terminal colorscheme model instance.
 
     :param colors: Instance of parsed terminal colorscheme model
@@ -254,4 +254,4 @@ def compute_colorscheme_from_terminal(
     )
     color_dict["lighter_fg"] = make_alt_color(color_dict["light_fg"], inverse=True)
 
-    return dotmixColorscheme.parse_obj(color_dict)
+    return DotmixColorscheme.parse_obj(color_dict)
