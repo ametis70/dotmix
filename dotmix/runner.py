@@ -374,7 +374,9 @@ def apply(
             click.echo(f"Running pre hook: {pre_hook}")
             code = run_hook(pre_hook)
             if code != 0:
-                return print_err(f"Hook {pre_hook} finished with an error", True)
+                print_err(f"Hook {pre_hook} finished with an error")
+                if click.confirm("Abort?", abort=False):
+                    sys.exit(1)
 
         out_dir = get_out_dir()
         backup_dir = get_out_backup_dir()
@@ -395,9 +397,10 @@ def apply(
             code = run_hook(post_hook)
             if code != 0:
                 print_err(f"Hook {post_hook} finished with an error")
-                click.echo("Restoring backup of out files")
-                shutil.move(backup_dir, out_dir)
-                sys.exit(1)
+                if click.confirm("Revert and restore backup?", abort=False):
+                    click.echo("Restoring backup of out files")
+                    shutil.move(backup_dir, out_dir)
+                    sys.exit(1)
 
         click.echo("Computing checksums\n")
         write_checksums()
