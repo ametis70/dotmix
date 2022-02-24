@@ -14,7 +14,12 @@ import click
 
 from dotmix.appearance import Appearance, get_appearance_by_id
 from dotmix.colorscheme import Colorscheme, get_colorscheme_by_id
-from dotmix.config import DefaultSettingType, get_data_dir, get_default_setting
+from dotmix.config import (
+    ThemeKeys,
+    get_data_dir,
+    get_default_setting,
+    set_current_theme,
+)
 from dotmix.data import DataClassType, GenericDataGetter
 from dotmix.fileset import FileModel, Fileset, get_fileset_by_id
 from dotmix.typography import Typography, get_typography_by_id
@@ -177,7 +182,7 @@ def print_modified_files(modified_files: List[str]) -> None:
 
 
 def get_settings(
-    field: DefaultSettingType,
+    field: ThemeKeys,
     id: Optional[str],
     getter: GenericDataGetter[DataClassType],
     use_defaults: bool,
@@ -404,4 +409,12 @@ def apply(
 
         click.echo("Computing checksums\n")
         write_checksums()
+        set_current_theme(
+            appearance_id,
+            typography_id,
+            colorscheme_id,
+            fileset_id,
+            pre_hook,
+            post_hook,
+        )
         click.secho("Done!", fg="green", bold=True)

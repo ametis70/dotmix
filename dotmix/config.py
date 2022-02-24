@@ -12,19 +12,19 @@ from dotmix.utils import get_path_from_env, load_toml_cfg_model, print_err
 
 # Types:
 
-DefaultSettingType = Literal[
+ThemeKeys = Literal[
     "colorscheme", "typography", "fileset", "appearance", "pre_hook", "post_hook"
 ]
-"""Possible keys for ``dotmix.config.DefaultsConfig``"""
+"""Possible keys for ``dotmix.config.ThemeConfig``"""
 
 
 # Models:
 
 
-class DefaultsConfig(BaseModel):
-    """Model for configuring the defaults
+class ThemeConfig(BaseModel):
+    """Model for specifying a theme (dictionary of IDs)
 
-    All keys are optional they take an ID (string) as a value
+    All keys are optional and they take an ID (string) as a value
 
     :param appearance: Appearance ID
     :param typography: Typography ID
@@ -69,7 +69,8 @@ class Config(BaseModel):
     """Root config model. This only holds other models for organizative purposes"""
 
     general: GeneralConfig
-    defaults: Optional[DefaultsConfig]
+    defaults: Optional[ThemeConfig]
+    current: Optional[ThemeConfig]
     colors: ColorsConfig
 
 
@@ -135,19 +136,60 @@ def get_config() -> Config:
         sys.exit(1)
 
 
-def get_default_setting(type: DefaultSettingType) -> Optional[str]:
-    """Get the value of one key from :class:`dotmix.config.DefaultsConfig` if it is
-    defined in the config
+def set_config(cfg: Config):
+    config_path = get_config_dir() / "config.toml"
+
+    with config_path.open("w") as f:
+        f.writelines(toml.dumps(cfg.dict()))
+
+
+def get_default_setting(type: ThemeKeys) -> Optional[str]:
+    """Get value from key in :class:`dotmix.config.Config.defaults` if defined.
 
     :return: String with the value associated with the key if it exists
     """
     v: Optional[str] = None
     try:
-        v = get_config().defaults.dict()[type]
+        defaults = get_config().defaults
+        if defaults is None:
+            print_err("Default settings not found")
+            return
+
+        v = defaults.dict()[type]
+
     except KeyError:
         pass
     finally:
         return v
+
+
+def get_current_theme() -> Optional[ThemeConfig]:
+    """Get the current applied theme from :attr:`dotmix.config.Config.theme`
+
+    :return: current applied theme
+    """
+
+    return get_config().current
+
+
+def set_current_theme(
+    appearance: Optional[str],
+    typography: Optional[str],
+    colorscheme: Optional[str],
+    fileset: Optional[str],
+    pre_hook: Optional[str],
+    post_hook: Optional[str],
+):
+    cfg = get_config()
+    cfg.current = ThemeConfig(
+        appearance=appearance,
+        typography=typography,
+        colorscheme=colorscheme,
+        fileset=fileset,
+        pre_hook=pre_hook,
+        post_hook=post_hook,
+    )
+    set_config(cfg)
 
 
 def create_config(
