@@ -2,11 +2,11 @@ import click
 
 from dotmix.appearance import get_appearance_by_id, get_appearances
 from dotmix.colorscheme import get_colorscheme_by_id, get_colorschemes
-from dotmix.config import create_config, scaffold_data_path
+from dotmix.config import create_config, get_current_theme, scaffold_data_path
 from dotmix.fileset import get_fileset_by_id, get_filesets
 from dotmix.runner import apply
 from dotmix.typography import get_typographies, get_typography_by_id
-from dotmix.utils import set_verbose
+from dotmix.utils import print_err, set_verbose
 
 from .completion import (
     AppearanceType,
@@ -153,6 +153,9 @@ def appearance_show(id):
 )
 @click.option("--force", "-F", is_flag=True, help="Run even if files changed")
 @click.option("--verbose", "-v", is_flag=True, help="Print additional information")
+@click.option(
+    "--reapply", "-r", is_flag=True, help="Run with last applied theme/settings"
+)
 def cli_apply(
     fileset,
     typography,
@@ -163,11 +166,28 @@ def cli_apply(
     no_defaults,
     force,
     verbose,
+    reapply,
 ):
     """Generate output files from fileset and data"""
 
     if verbose:
         set_verbose(True)
+
+    if reapply:
+        current = get_current_theme()
+        if not current:
+            return print_err(
+                "There are no theme or settings stored. Run without -r/--reapply", True
+            )
+
+        current_dict = current.dict()
+
+        fileset = current_dict.get("fileset") or fileset
+        typography = current_dict.get("typography") or typography
+        appearance = current_dict.get("appearance") or appearance
+        colorscheme = current_dict.get("colorscheme") or colorscheme
+        pre = current_dict.get("pre_hook") or pre
+        post = current_dict.get("post_hook") or post
 
     apply(
         fileset_id=fileset,
