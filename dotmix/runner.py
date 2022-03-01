@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, cast
+from typing import Callable, Dict, List, Optional, cast, Set, Tuple
 
 import chevron
 import click
@@ -175,7 +175,9 @@ def print_modified_files(modified_files: List[str]) -> None:
     :func:`verify_checksums`
     """
     if modified_files:
-        click.secho("The following files where modified:\n", fg="yellow")
+        click.secho(
+            "The following files (current output) were modified:\n", fg="yellow"
+        )
         for file in modified_files:
             click.secho(file, fg="yellow")
         click.echo("")
@@ -283,6 +285,97 @@ def merge_data(
     return vars
 
 
+FilesetModifications = Tuple[str, str, str]
+"""Tuple for storing modifications of the current fileset
+
+All fields are comma separated list of of files, and each field represents the
+following values:
+
+0: Removed files
+1: Added files
+2: Modified files
+"""
+
+
+def check_current_fileset_modifications(
+    new_out_dir: Path,
+) -> Optional[FilesetModifications]:
+    """Check if current (applied) fileset was modified
+
+    :returns: `:data:FilesetModifications`
+    """
+    backup_dir = get_out_backup_dir()
+
+    # Check if dir exists, and if so if it's empty
+    err = 0
+    errors = {
+        1: "You don't have previously generated output files",
+        2: "Your output path is not a directory",
+    }
+
+    try:
+        if len(os.listdir(backup_dir)) == 0:
+            err = 1
+    except FileNotFoundError:
+        err = 1
+    except NotADirectoryError:
+        err = 2
+    finally:
+        if err > 0:
+            print_err(errors[err])
+            return None
+
+    backup_files: Set[Path] = set()
+    for root, _, files in os.walk(backup_dir):
+        for file in files:
+            backup_files.add(Path(root, file).relative_to(backup_dir))
+
+    new_out_files: Set[Path] = set()
+    for root, _, files in os.walk(new_out_dir):
+        for file in files:
+            new_out_files.add(Path(root, file).relative_to(new_out_dir))
+
+    removed_files: List[str] = []
+    new_files: List[str] = []
+    modified_files: List[str] = []
+
+    for file in backup_files - new_out_files:
+        removed_files.append(str(file))
+
+    if len(removed_files) > 0:
+        click.secho("Removed files: ")
+        for file in removed_files:
+            click.secho(f"- {file}", fg="red")
+
+    for file in new_out_files - backup_files:
+        new_files.append(str(file))
+
+    if len(new_files) > 0:
+        click.secho("\nNew files: ")
+        for file in new_files:
+            click.secho(f"+ {file}", fg="green")
+
+    for file in backup_files & new_out_files:
+        relative_path = str(file)
+
+        new_hash = hash_file(Path(new_out_dir, relative_path))
+        backup_hash = hash_file(Path(backup_dir, relative_path))
+
+        if new_hash != backup_hash:
+            modified_files.append(relative_path)
+
+    if len(modified_files) > 0:
+        click.secho("\nModified files: ")
+        for file in modified_files:
+            click.secho(f"~ {file}", fg="yellow")
+
+    return (
+        ",".join(removed_files),
+        ",".join(new_files),
+        ",".join(modified_files),
+    )
+
+
 def apply(
     *,
     colorscheme_id: Optional[str] = None,
@@ -372,8 +465,8 @@ def apply(
     click.echo("")
 
     with tempfile.TemporaryDirectory(prefix="dotmix_out") as tmp_dir:
-        if fileset:
-            render_fileset(fileset, tmp_dir, vars)
+        render_fileset(fileset, tmp_dir, vars)
+        check_current_fileset_modifications(Path(tmp_dir))
 
         if pre_hook:
             click.echo(f"Running pre hook: {pre_hook}")
@@ -391,7 +484,7 @@ def apply(
             shutil.rmtree(backup_dir)
 
         if out_dir.exists():
-            click.echo("Making backup of output files")
+            click.echo("Making backup of previous output files")
             shutil.move(out_dir, backup_dir)
 
         click.echo("Copying new output files from temporary directory")
@@ -403,7 +496,8 @@ def apply(
             if code != 0:
                 print_err(f"Hook {post_hook} finished with an error")
                 if click.confirm("Revert and restore backup?", abort=False):
-                    click.echo("Restoring backup of out files")
+                    click.echo("Restoring backup of previous out files")
+                    shutil.rmtree(out_dir)
                     shutil.move(backup_dir, out_dir)
                     sys.exit(1)
 
@@ -417,4 +511,9 @@ def apply(
             pre_hook,
             post_hook,
         )
+
+        click.echo("Making backup of new output files")
+        shutil.rmtree(backup_dir)
+        shutil.copytree(out_dir, backup_dir)
+
         click.secho("Done!", fg="green", bold=True)
