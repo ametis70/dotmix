@@ -7,15 +7,6 @@
   "scripts": {
     "release": "release-it"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ianmethyst/dotmix.git"
-  },
-  "author": "",
-  "bugs": {
-    "url": "https://github.com/ianmethyst/dotmix/issues"
-  },
-  "homepage": "https://github.com/ianmethyst/dotmix#readme",
   "devDependencies": {
     "@release-it/bumper": "^4.0.0",
     "@release-it/conventional-changelog": "^5.0.0",

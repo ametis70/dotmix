@@ -2,44 +2,49 @@
 name = "dotmix"
 version = "0.1.0"
 description = "dotmix is a library and a cli that offers a template based solution to managing your dotfiles"
-authors = ["Ian Mancini <ianmethyst@gmail.com>"]
+authors = [ "Ian Mancini <ianmethyst@gmail.com>" ]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-chevron = "^0.14.0"
-click = "^8.0.1"
-toml = "^0.10.2"
-pydantic = "^1.8.2"
-colp = "^0.0.2"
-# Docs
-Sphinx = "^4.4.0"
-sphinx-autoapi = "^1.8.4"
-sphinx-rtd-theme = "^1.0.0"
+  [tool.poetry.dependencies]
+  python = "^3.9"
+  chevron = "^0.14.0"
+  click = "^8.0.1"
+  toml = "^0.10.2"
+  pydantic = "^1.8.2"
+  colp = "^0.0.2"
+  Sphinx = "^4.4.0"
+  sphinx-autoapi = "^1.8.4"
+  sphinx-rtd-theme = "^1.0.0"
 
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
-black = {version = "^21.5b2", allow-prereleases = true}
-flake8 = "^3.9.2"
-pre-commit = "^2.13.0"
-isort = {extras = ["pyproject"], version = "^5.9.3"}
-Sphinx = "^4.4.0"
-sphinx-autoapi = "^1.8.4"
-sphinx-rtd-theme = "^1.0.0"
+  [tool.poetry.dev-dependencies]
+  pytest = "^5.2"
+  flake8 = "^3.9.2"
+  pre-commit = "^2.13.0"
+  Sphinx = "^4.4.0"
+  sphinx-autoapi = "^1.8.4"
+  sphinx-rtd-theme = "^1.0.0"
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+    [tool.poetry.dev-dependencies.black]
+    version = "^21.5b2"
+    allow-prereleases = true
 
-[tool.poetry.scripts]
-dotmix = "dotmix.cli:cli"
+    [tool.poetry.dev-dependencies.isort]
+    extras = [ "pyproject" ]
+    version = "^5.9.3"
+
+  [tool.poetry.scripts]
+  dotmix = "dotmix.cli:cli"
+
+  [tool.poetry.extras]
+  docs = [ "sphinx", "sphinx-rtd-theme", "sphinx-autoapi" ]
 
 [tool.black]
-target-version = ['py39']
-include = '\.pyi?$'
+target-version = [ "py39" ]
+include = "\\.pyi?$"
 
 [tool.isort]
 profile = "black"
 multi_line_output = 3
 
-[tool.poetry.extras]
-docs = ["sphinx", "sphinx-rtd-theme", "sphinx-autoapi"]
+[build-system]
+requires = [ "poetry-core>=1.0.0" ]
+build-backend = "poetry.core.masonry.api"

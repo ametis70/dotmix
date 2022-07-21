@@ -2,6 +2,9 @@
   "git": {
     "commitMessage": "chore: release ${version}"
   },
+  "hooks": {
+    "after:bump": ["sed -i 's/${latestVersion}/${version}/g' dotmix/__init__.py dotmix/cli/__init__.py"]
+  },
   "github": {
     "release": true
   },
@@ -16,7 +19,11 @@
       "ignoreRecommendedBump": false
     },
     "@release-it/bumper": {
-      "out": ["dotmix/__init__.py", "dotmix/cli/__init__.py"]
+      "out": {
+        "file": "pyproject.toml",
+        "type": "application/toml",
+        "path": "tool.poetry.version"
+      }
     }
   }
 }
