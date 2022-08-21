@@ -52,7 +52,7 @@ class Fileset(AbstractData[DataFileModel, FileModelDict]):
         return self._get_parents(get_filesets, [self])
 
     def compute_data(self) -> None:
-        if not self.file_data.extends:
+        if not self.file_data or not self.file_data.extends:
             self.data = get_paths_from_fileset(self)
 
         file_paths: FileModelDict = {}
@@ -102,11 +102,10 @@ def get_fileset_files():
 
         if path.exists():
             cfg = load_toml_cfg(path)
-            name = cfg["name"]
             id = dir.name
 
-            if cfg and name:
-                fileset_data_files[id] = {"id": id, "path": path, "name": name}
+            if cfg and cfg.name:
+                fileset_data_files[id] = {"id": id, "path": path, "name": cfg.name}
 
     return fileset_data_files
 
