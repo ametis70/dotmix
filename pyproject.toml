@@ -16,16 +16,13 @@ authors = [ "Ian Mancini <ianmethyst@gmail.com>" ]
   sphinx-rtd-theme = "^1.0.0"
 
   [tool.poetry.dev-dependencies]
-  pytest = "^5.2"
-  flake8 = "^3.9.2"
+  pytest = "^7.1.2"
+  flake8 = "^5.0.4"
   pre-commit = "^2.13.0"
   Sphinx = "^4.4.0"
   sphinx-autoapi = "^1.8.4"
   sphinx-rtd-theme = "^1.0.0"
-
-    [tool.poetry.dev-dependencies.black]
-    version = "^21.5b2"
-    allow-prereleases = true
+  black = "^22.6.0"
 
     [tool.poetry.dev-dependencies.isort]
     extras = [ "pyproject" ]
