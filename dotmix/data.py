@@ -240,8 +240,8 @@ class AbstractData(Generic[DataFileModelType, DataType], metaclass=ABCMeta):
 
 
 class BasicData(AbstractData[DataFileModel, BaseModel]):
-    """Abstract data class for subclasses that use :class:`dotmix.data.DataFileModel` as it
-    file data model and :class:`pydantic.BaseModel` as its (custom) data type
+    """Abstract data class for subclasses that use :class:`dotmix.data.DataFileModel` as
+    its file data model and :class:`pydantic.BaseModel` as its (custom) data type
     """
 
     def load_data_file(self):

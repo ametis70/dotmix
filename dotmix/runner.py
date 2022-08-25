@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, cast, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple, cast
 
 import chevron
 import click

@@ -141,8 +141,8 @@ def get_colorscheme_by_id(id: str) -> Optional[Colorscheme]:
 
 
 def compute_colors(colors: ParsedColorschemes) -> DotmixColorscheme:
-    """Function called by :meth:`dotmix.colorscheme.Colorscheme.compute_data` to generate
-    a colorscheme that can be used by the template engine
+    """Function called by :meth:`dotmix.colorscheme.Colorscheme.compute_data` to
+    generate a colorscheme that can be used by the template engine
 
     Read the enviorment variable ``DOTMIX_COLORMODE`` to determine what function to call
     based on the colormode. If the variable is not set, it will fall back to reading
