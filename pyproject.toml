@@ -23,6 +23,7 @@ authors = [ "Ian Mancini <ianmethyst@gmail.com>" ]
   sphinx-autoapi = "^1.8.4"
   sphinx-rtd-theme = "^1.0.0"
   black = "^22.6.0"
+  coverage = "^6.5.0"
 
     [tool.poetry.dev-dependencies.isort]
     extras = [ "pyproject" ]
