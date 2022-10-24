@@ -1,0 +1,4 @@
+name = "Extend"
+
+[colors.terminal]
+red = #FF5454

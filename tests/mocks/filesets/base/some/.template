@@ -1,0 +1,3 @@
+typography = {{ typography.sans.font }}
+red = {{ colors.red }}
+gtk-theme = {{ appearance.gtk }}

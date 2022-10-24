@@ -1,0 +1,5 @@
+name = "Base"
+
+[colors.terminal]
+red = #B21818
+blue = #1818B2

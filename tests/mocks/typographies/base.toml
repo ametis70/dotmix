@@ -1,0 +1,9 @@
+name = "Base"
+
+[custom]
+
+[custom.sans]
+font = "Noto Sans"
+
+[custom.serif]
+font = "Noto Serif"

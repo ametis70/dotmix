@@ -1,0 +1,4 @@
+name = "Extend"
+
+[custom]
+gtk-theme = "arc"
