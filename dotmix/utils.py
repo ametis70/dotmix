@@ -2,15 +2,13 @@
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 import click
 import toml
 from pydantic.error_wrappers import ValidationError
 from pydantic.main import BaseModel
 from toml import TomlDecodeError
-
-from dotmix.data import DataFileModel
 
 VERBOSE = "DOTMIX_VERBOSE"
 """Environment variable name to determine if more information should be printed"""
@@ -83,7 +81,7 @@ def get_path_from_env(env_vars: List[Union[str, Tuple[str, bool]]]) -> str:
     sys.exit(1)
 
 
-def load_toml_cfg(path: Path) -> Optional[Dict[str, DataFileModel]]:
+def load_toml_cfg(path: Path) -> Optional[Dict[str, Any]]:
     """Load a TOML file into a dict
 
     :param path: Path of the TOML file
@@ -96,7 +94,7 @@ def load_toml_cfg(path: Path) -> Optional[Dict[str, DataFileModel]]:
     try:
         fd = path.open("r")
         content = fd.read()
-        cfg = cast(Dict[str, DataFileModel], toml.loads(content))
+        cfg = toml.loads(content)
 
         if not cfg:
             print_wrn(f"{path} exist but it's empty")
