@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dotmix"
-version = "0.2.0"
+version = "0.3.0"
 description = "dotmix is a library and a cli that offers a template based solution to managing your dotfiles"
 authors = [ "Ian Mancini <ianmethyst@gmail.com>" ]
 
