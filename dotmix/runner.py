@@ -143,46 +143,6 @@ def write_checksums() -> None:
         f.writelines(checksums)
 
 
-def verify_checksums() -> List[str]:
-    """Verify checksums and return a list of modified files.
-
-    :returns: List of modified files
-    """
-    data_dir = get_data_dir()
-    modified_files = []
-
-    file = get_checksums_file()
-    if not file.exists():
-        return []
-
-    with get_checksums_file().open("r") as f:
-        lines = f.readlines()
-        for line in lines:
-            digest, file = line.split()
-            path = Path(data_dir, file)
-            if path.exists():
-                hash = hash_file(path)
-                if hash != digest:
-                    modified_files.append(file)
-
-    return modified_files
-
-
-def print_modified_files(modified_files: List[str]) -> None:
-    """Pretty prints modified files.
-
-    :param modified_files: This should be a list of files like the one returned by
-    :func:`verify_checksums`
-    """
-    if modified_files:
-        click.secho(
-            "The following files (current output) were modified:\n", fg="yellow"
-        )
-        for file in modified_files:
-            click.secho(file, fg="yellow")
-        click.echo("")
-
-
 def get_settings(
     field: ThemeKeys,
     id: Optional[str],
@@ -285,24 +245,24 @@ def merge_data(
     return vars
 
 
-FilesetModifications = Tuple[str, str, str]
+FilesetChanges = Tuple[List[str], List[str], List[str]]
 """Tuple for storing modifications of the current fileset
 
-All fields are comma separated list of of files, and each field represents the
-following values:
+Each list contains the following relative paths:
 
-0: Removed files
-1: Added files
-2: Modified files
+0: Added files
+1: Modified files
+2: Removed files
 """
 
 
-def check_current_fileset_modifications(
-    new_out_dir: Path,
-) -> Optional[FilesetModifications]:
-    """Check if current (applied) fileset was modified
+def check_fileset_changes(
+    out_dir: Path,
+) -> Optional[FilesetChanges]:
+    """Check previously generated files were modified
 
-    :returns: `:data:FilesetModifications`
+    :param out_dir: Root path of output files
+    :returns: `:data:FilesetChanges` or None, if there are no changes
     """
     backup_dir = get_out_backup_dir()
 
@@ -331,49 +291,68 @@ def check_current_fileset_modifications(
             backup_files.add(Path(root, file).relative_to(backup_dir))
 
     new_out_files: Set[Path] = set()
-    for root, _, files in os.walk(new_out_dir):
+    for root, _, files in os.walk(out_dir):
         for file in files:
-            new_out_files.add(Path(root, file).relative_to(new_out_dir))
+            new_out_files.add(Path(root, file).relative_to(out_dir))
 
-    removed_files: List[str] = []
-    new_files: List[str] = []
+    removed_files: List[str] = [str(file) for file in backup_files - new_out_files]
+    new_files: List[str] = [str(file) for file in new_out_files - backup_files]
     modified_files: List[str] = []
-
-    for file in backup_files - new_out_files:
-        removed_files.append(str(file))
-
-    if len(removed_files) > 0:
-        click.secho("Removed files: ")
-        for file in removed_files:
-            click.secho(f"- {file}", fg="red")
-
-    for file in new_out_files - backup_files:
-        new_files.append(str(file))
-
-    if len(new_files) > 0:
-        click.secho("\nNew files: ")
-        for file in new_files:
-            click.secho(f"+ {file}", fg="green")
 
     for file in backup_files & new_out_files:
         relative_path = str(file)
 
-        new_hash = hash_file(Path(new_out_dir, relative_path))
+        new_hash = hash_file(Path(out_dir, relative_path))
         backup_hash = hash_file(Path(backup_dir, relative_path))
 
         if new_hash != backup_hash:
             modified_files.append(relative_path)
 
-    if len(modified_files) > 0:
-        click.secho("\nModified files: ")
-        for file in modified_files:
-            click.secho(f"~ {file}", fg="yellow")
-
-    return (
-        ",".join(removed_files),
-        ",".join(new_files),
-        ",".join(modified_files),
+    changes = (
+        new_files,
+        modified_files,
+        removed_files,
     )
+
+    if all(len(c) == 0 for c in changes):
+        return None
+
+    return changes
+
+
+def print_fileset_changes(changes: FilesetChanges, verbose: bool = True):
+    settings = {
+        0: {
+            "title": "Added files: ",
+            "icon": "+",
+            "color": "green",
+        },
+        1: {
+            "title": "Modified files: ",
+            "icon": "~",
+            "color": "yellow",
+        },
+        2: {
+            "title": "Removed files: ",
+            "icon": "-",
+            "color": "red",
+        },
+    }
+
+    for index, category in enumerate(changes):
+        s = settings[index]
+        if len(category) > 0:
+            if verbose:
+                click.secho(s["title"])
+                for file in category:
+                    click.secho(f"  {s['icon']} {file}", fg=s["color"])
+                if index < len(changes) - 1:
+                    click.echo("")
+            else:
+                click.secho(f"{s['title']}{len(category)}", fg=s["color"])
+
+            if index == len(changes) - 1:
+                click.echo("")
 
 
 def apply(
@@ -411,13 +390,16 @@ def apply(
     if not fileset:
         return print_err("No fileset specified", True)
 
-    modified_files = verify_checksums()
-    print_modified_files(modified_files)
-    if modified_files and not force:
-        return print_err(
-            "Please discard the changes or run with -F/--force flag",
-            True,
-        )
+    changes = check_fileset_changes(get_out_dir())
+
+    if changes:
+        click.secho("You have made changes in your generated files: \n")
+        print_fileset_changes(changes, get_verbose())
+        if not force:
+            return print_err(
+                "Please discard the changes or run with -F/--force flag",
+                True,
+            )
 
     colorscheme = get_settings(
         "colorscheme", colorscheme_id, get_colorscheme_by_id, use_defaults
@@ -455,7 +437,7 @@ def apply(
 
     if interactive:
         overwrite_text = (
-            "(Modified files will be overwritten)" if force and modified_files else ""
+            "(Modified files will be overwritten)" if force and changes else ""
         )
         if click.confirm(f"Continue? {overwrite_text}", abort=True):
             pass
@@ -466,7 +448,7 @@ def apply(
 
     with tempfile.TemporaryDirectory(prefix="dotmix_out") as tmp_dir:
         render_fileset(fileset, tmp_dir, vars)
-        check_current_fileset_modifications(Path(tmp_dir))
+        check_fileset_changes(Path(tmp_dir))
 
         if pre_hook:
             click.echo(f"Running pre hook: {pre_hook}")
