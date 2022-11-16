@@ -3,7 +3,9 @@
     "commitMessage": "chore: release ${version}"
   },
   "hooks": {
-    "after:bump": ["sed -i 's/${latestVersion}/${version}/g' dotmix/__init__.py dotmix/cli/__init__.py"]
+    "after:bump": [
+      "sed -i 's/${latestVersion}/${version}/g' dotmix/__init__.py dotmix/cli/__init__.py tests/test_version.py"
+    ]
   },
   "github": {
     "release": true
