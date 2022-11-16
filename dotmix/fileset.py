@@ -17,7 +17,7 @@ from dotmix.data import (
 )
 
 from .config import get_data_dir
-from .utils import deep_merge, load_toml_cfg, load_toml_cfg_model
+from .utils import deep_merge, load_toml_cfg_model
 
 
 class FileModel(BaseModel):
@@ -101,7 +101,7 @@ def get_fileset_files():
         path = dir / "settings.toml"
 
         if path.exists():
-            cfg = load_toml_cfg(path)
+            cfg = load_toml_cfg_model(path, DataFileModel)
             id = dir.name
 
             if cfg and cfg.name:
